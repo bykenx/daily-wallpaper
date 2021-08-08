@@ -24,7 +24,7 @@ func handleGetAllSettings(c *gin.Context) {
 }
 
 func handleModifySettings(c *gin.Context) {
-	settings := readSettings()
+	var settings Settings
 	err := c.ShouldBind(&settings)
 	if err != nil {
 		ginJsonError(c, err.Error())
@@ -51,12 +51,11 @@ func handleGetSources(c *gin.Context) {
 }
 
 func handleTodayImage(c *gin.Context) {
-	name := c.DefaultQuery("source", "bing")
-	source := GetSource(name)
-	if source == nil {
-		ginJsonError(c, "不支持的数据源")
-		return
+	name := readSettings().CurrentSource
+	if name == "" {
+		name = "bing"
 	}
+	source := GetSource(name)
 	res, err := source.GetToday()
 	if err != nil {
 		ginJsonError(c, err.Error())
@@ -65,12 +64,11 @@ func handleTodayImage(c *gin.Context) {
 }
 
 func handleArchiveImages(c *gin.Context) {
-	name := c.DefaultQuery("source", "bing")
-	source := GetSource(name)
-	if source == nil {
-		ginJsonError(c, "不支持的数据源")
-		return
+	name := readSettings().CurrentSource
+	if name == "" {
+		name = "bing"
 	}
+	source := GetSource(name)
 	var param sources.ArchiveParam
 	_ = c.ShouldBind(&param)
 	res, err := source.GetArchive(param)
