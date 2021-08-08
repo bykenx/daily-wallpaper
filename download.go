@@ -1,6 +1,7 @@
 package main
 
 import (
+	"daily-wallpaper/sources"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -55,7 +56,7 @@ func downloadFileAndSave(url string) (string, error) {
 }
 
 func downloadSource(url string) ([]byte, string, error) {
-	res, err := http.Get(url)
+	res, err := http.Get(sources.GetSafeUrl(url))
 	if err != nil {
 		return nil, "", DownloadError{msg: err.Error()}
 	}
