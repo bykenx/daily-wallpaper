@@ -35,24 +35,24 @@
 </template>
 
 <script>
-import { defineComponent, inject, onMounted, ref, watch } from 'vue'
+import { defineComponent, inject, onMounted, ref, unref, watch } from 'vue'
 import { NButton, NCol, NForm, NFormItem, NImage, NInput, NRow, NSwitch, NTimePicker, useMessage } from 'naive-ui'
 import ImageItem from '@/components/ImageItem.vue'
 import GlobalData from '@/injections/GlobalData'
-import useImage from '@/composables/useImage'
+import useApi from '@/composables/useApi'
 
 export default defineComponent({
   components: { ImageItem, NImage, NCol, NRow, NForm, NFormItem, NSwitch, NInput, NTimePicker, NButton },
   setup() {
     const { settings, setLoading } = inject(GlobalData)
-    const { getTodayImage } = useImage()
     const message = useMessage()
+    const { getTodayImage } = useApi()
 
     const todayImage = ref()
     const formModel = ref({})
     onMounted(() => {
       setLoading(true)
-      getTodayImage(settings.currentSource)
+      getTodayImage()
         .then(data => {
           todayImage.value = data
         })

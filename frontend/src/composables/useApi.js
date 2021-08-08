@@ -16,9 +16,24 @@ function updateSettings(settings) {
     })
 }
 
-export default function useSettings() {
+function getAllSources() {
+  return wrappedErrHandleGet(`/image/sources`)
+}
+
+function getArchiveImages(source) {
+  return wrappedErrHandleGet(`/image/archive`, { query: { source } })
+}
+
+function getTodayImage(source) {
+  return wrappedErrHandleGet(`/image/today`, { query: { source } })
+}
+
+export default function useApi() {
   return {
     getAllSettings,
     updateSettings,
+    getAllSources,
+    getArchiveImages,
+    getTodayImage
   }
 }
