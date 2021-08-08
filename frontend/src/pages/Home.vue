@@ -40,6 +40,7 @@ import { NButton, NCol, NForm, NFormItem, NImage, NInput, NRow, NSwitch, NTimePi
 import ImageItem from '@/components/ImageItem.vue'
 import GlobalData from '@/injections/GlobalData'
 import useApi from '@/composables/useApi'
+import useToggle from '@/composables/useToggle'
 
 export default defineComponent({
   components: { ImageItem, NImage, NCol, NRow, NForm, NFormItem, NSwitch, NInput, NTimePicker, NButton },
@@ -50,7 +51,8 @@ export default defineComponent({
 
     const todayImage = ref()
     const formModel = ref({})
-    onMounted(() => {
+
+    const fetchImage = () => {
       setLoading(true)
       getTodayImage()
         .then(data => {
@@ -62,10 +64,19 @@ export default defineComponent({
         .finally(() => {
           setLoading(false)
         })
+    }
+    onMounted(() => {
+      fetchImage()
     })
     const defaultTime = new Date('2000/01/01 08:00')
     watch(settings, (value) => {
-      formModel.value = { ...value, timeToUpdate: value.timeToUpdate ? value.timeToUpdate : null }
+      formModel.value = {
+        ...value,
+        timeToUpdate: value.timeToUpdate ? value.timeToUpdate : null,
+      }
+    })
+    watch(() => unref(settings).currentSource, () => {
+      fetchImage()
     })
     return {
       todayImage,
