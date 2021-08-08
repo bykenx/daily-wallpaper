@@ -6,6 +6,7 @@ type Settings struct {
 	AutoUpdate          bool   `json:"autoUpdate" yaml:"auto_update"`
 	TimeToUpdate        string `json:"timeToUpdate" yaml:"time_to_update"`
 	AutoRunAtSystemBoot bool   `json:"AutoRunAtSystemBoot" yaml:"auto_run_at_system_boot"`
+	QualityFirst        bool   `json:"qualityFirst" yaml:"quality_first"`
 }
 
 type DownloadHistory struct {

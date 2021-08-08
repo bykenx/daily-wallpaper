@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { defineComponent, inject } from 'vue'
+import { defineComponent, inject, unref } from 'vue'
 import { NButton, NIcon, useMessage } from 'naive-ui'
 import IconWallpaper from '@/assets/icon-wallpaper.svg'
 import IconDownload from '@/assets/icon-download.svg'
@@ -47,7 +47,7 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const { refreshSettings } = inject(GlobalData)
+    const { settings, refreshSettings } = inject(GlobalData)
     const message = useMessage()
     const { updateSettings } = useApi()
     const handleDownload = () => {
@@ -63,8 +63,10 @@ export default defineComponent({
     }
 
     const handleSetWallpaper = () => {
+      const { url, urlHS } = props.value
+      const { qualityFirst } = unref(settings)
       const data = {
-        currentImage: props.value.url,
+        currentImage: qualityFirst && urlHS ? urlHS : url,
       }
       updateSettings(data)
         .then(data => {

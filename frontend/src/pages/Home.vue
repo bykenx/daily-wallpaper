@@ -20,6 +20,9 @@
             <NFormItem path="autoUpdate" label="每天自动更新桌面">
               <NSwitch v-model:value="model.autoUpdate" />
             </NFormItem>
+            <NFormItem path="qualityFirst" label="更高品质">
+              <NSwitch v-model:value="model.qualityFirst" />
+            </NFormItem>
             <NFormItem v-if="model.autoUpdate" path="timeToUpdate" label="更新时间">
               <NTimePicker
                 :default-value="defaultTime"
