@@ -43,7 +43,6 @@ export default defineComponent({
           data.pagination = { current, pageSize }
           data.end = end
           data.items.push(...items)
-          console.log(items)
         })
         .catch(err => {
           message.error(err)
