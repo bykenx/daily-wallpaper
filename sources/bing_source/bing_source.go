@@ -6,8 +6,11 @@ import (
 	"time"
 )
 
-type BingSource struct {
-}
+const (
+	UrlPrefix = "https://cn.bing.com/HPImageArchive.aspx?%s"
+)
+
+type BingSource struct{}
 
 func (s BingSource) GetToday() (sources.TodayResponse, error) {
 	payload := RequestPayload{
@@ -16,16 +19,18 @@ func (s BingSource) GetToday() (sources.TodayResponse, error) {
 		PageSize:  1,
 		Timestamp: time.Now().Unix(),
 	}
-	items := dispatchRequest(payload)
-	if len(items) <= 0 {
-		return sources.ImageItem{}, nil
+	var result Response
+	err := sources.DispatchGetRequest(UrlPrefix, payload, &result)
+	if err != nil {
+		return sources.ImageItem{}, err
 	}
+	item := result.Images[0]
 	return sources.ImageItem{
-		Name:          items[0].Title,
-		Url:           fmt.Sprintf("https://cn.bing.com%s", items[0].Url),
+		Name:          item.Title,
+		Url:           fmt.Sprintf("https://cn.bing.com%s", item.Url),
 		Description:   "",
-		Copyright:     items[0].Copyright,
-		CopyrightLink: items[0].CopyrightLink,
+		Copyright:     item.Copyright,
+		CopyrightLink: item.CopyrightLink,
 		SourceLink:    "",
 		Author:        "",
 		Location:      "",
@@ -40,18 +45,21 @@ func (s BingSource) GetArchive(param sources.ArchiveParam) (sources.ArchiveRespo
 		Timestamp: time.Now().Unix(),
 	}
 	var items []sources.ImageItem
-	res := dispatchRequest(payload)
-	for _, item := range res {
-		items = append(items, sources.ImageItem{
-			Name:          item.Title,
-			Url:           fmt.Sprintf("https://cn.bing.com%s", item.Url),
-			Description:   "",
-			Copyright:     item.Copyright,
-			CopyrightLink: item.CopyrightLink,
-			SourceLink:    "",
-			Author:        "",
-			Location:      "",
-		})
+	var result Response
+	err := sources.DispatchGetRequest(UrlPrefix, payload, &result)
+	if err == nil {
+		for _, item := range result.Images {
+			items = append(items, sources.ImageItem{
+				Name:          item.Title,
+				Url:           fmt.Sprintf("https://cn.bing.com%s", item.Url),
+				Description:   "",
+				Copyright:     item.Copyright,
+				CopyrightLink: item.CopyrightLink,
+				SourceLink:    "",
+				Author:        "",
+				Location:      "",
+			})
+		}
 	}
 	return sources.ArchiveResponse{
 		Items:    items,
