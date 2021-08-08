@@ -8,7 +8,7 @@ function getAllSettings() {
 function updateSettings(settings) {
   return request.put(`/settings`, { data: settings })
     .then(res => {
-      const err  =getErrorIfExist(res)
+      const err = getErrorIfExist(res)
       if (err) {
         return Promise.reject(err)
       }
@@ -20,12 +20,12 @@ function getAllSources() {
   return wrappedErrHandleGet(`/image/sources`)
 }
 
-function getArchiveImages(source) {
-  return wrappedErrHandleGet(`/image/archive`, { query: { source } })
+function getArchiveImages(params) {
+  return wrappedErrHandleGet(`/image/archive`, { params })
 }
 
-function getTodayImage(source) {
-  return wrappedErrHandleGet(`/image/today`, { query: { source } })
+function getTodayImage() {
+  return wrappedErrHandleGet(`/image/today`)
 }
 
 export default function useApi() {
@@ -34,6 +34,6 @@ export default function useApi() {
     updateSettings,
     getAllSources,
     getArchiveImages,
-    getTodayImage
+    getTodayImage,
   }
 }

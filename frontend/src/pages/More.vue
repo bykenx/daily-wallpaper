@@ -2,7 +2,7 @@
   <div class="More">
     <div class="More-gallery">
       <NGrid :cols="2">
-        <NGi :key="index" v-for="(image, index) in archiveImages">
+        <NGi :key="index" v-for="(image, index) in data.items">
           <ImageItem :value="image" />
         </NGi>
       </NGrid>
@@ -12,34 +12,38 @@
 </template>
 
 <script>
-import { defineComponent, inject, onMounted, onUnmounted, reactive, watch } from 'vue'
+import { defineComponent, inject, onMounted, onUnmounted, reactive, unref, watch } from 'vue'
 import { NGi, NGrid, NImage, useMessage } from 'naive-ui'
 import ImageItem from '@/components/ImageItem.vue'
 import GlobalData from '@/injections/GlobalData'
 import useApi from '@/composables/useApi'
+import useToggle from '@/composables/useToggle'
 
 export default defineComponent({
   components: { ImageItem, NImage, NGrid, NGi },
   setup() {
+    /** @type {IntersectionObserver} */
+    let observer
+
     const { settings, setLoading } = inject(GlobalData)
     const { getArchiveImages } = useApi()
     const message = useMessage()
-    /** @type {IntersectionObserver} */
-    let observer
+    const [loadMore, setLoadMore] = useToggle()
+
     const data = reactive({
       items: [],
       pagination: { current: 0, pageSize: 8 },
       end: false,
     })
-    const pagination = reactive({ current: 0, pageSize: 8 })
     const fetchImages = () => {
       setLoading(true)
-      return getArchiveImages()
+      return getArchiveImages(data.pagination)
         .then(r => {
           const { current, pageSize, end, items } = r
           data.pagination = { current, pageSize }
           data.end = end
           data.items.push(...items)
+          console.log(items)
         })
         .catch(err => {
           message.error(err)
@@ -48,17 +52,24 @@ export default defineComponent({
           setLoading(false)
         })
     }
-    watch(() => pagination.current, () => {
+    watch(loadMore, () => {
       if (!data.end) {
         fetchImages()
       }
     })
+    watch(() => unref(settings).currentSource, () => {
+      data.items = []
+      data.pagination.current = 0
+      data.end = false
+      setLoadMore()
+    })
     onMounted(() => {
-      fetchImages(settings.currentSource)
+      fetchImages()
         .then(() => {
           observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) {
-              pagination.current += 1
+              data.pagination.current += 1
+              setLoadMore()
             }
           }, {})
           observer.observe(document.querySelector('.More-gasket'))
@@ -68,7 +79,7 @@ export default defineComponent({
       observer?.disconnect()
     })
     return {
-      archiveImages: data.items,
+      data
     }
   },
 })
