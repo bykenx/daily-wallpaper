@@ -3,12 +3,12 @@ package main
 import (
 	"daily-wallpaper/sources"
 	"daily-wallpaper/sources/bing_source"
+	"daily-wallpaper/sources/unsplash_source"
+	"github.com/gin-gonic/gin"
 	"log"
 	"os"
 	"os/exec"
 	"runtime"
-
-	"github.com/gin-gonic/gin"
 )
 
 func OpenUrl(url string) {
@@ -75,13 +75,24 @@ func GetSource(name string) sources.Source {
 	switch name {
 	case "bing":
 		return bing_source.BingSource{}
+	case "unsplash":
+		return unsplash_source.UnsplashSource{}
 	default:
 		return nil
 	}
 }
 
+func GetLastModifyTime(path string) int64 {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return 0
+	}
+	return stat.ModTime().Unix()
+}
+
 func GetDescriptions() []sources.Description {
 	return []sources.Description{
-		{Name: "bing壁纸", Description: "bing壁纸", Enabled: true},
+		{Name: "bing", Description: "bing壁纸", Enabled: true},
+		{Name: "unsplash", Description: "Unsplash", Enabled: true},
 	}
 }
