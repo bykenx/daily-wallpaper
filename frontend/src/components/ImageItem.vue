@@ -36,7 +36,7 @@ import IconWallpaper from '@/assets/icon-wallpaper.svg'
 import IconDownload from '@/assets/icon-download.svg'
 import request from '@/utils/request'
 import GlobalData from '@/injections/GlobalData'
-import useSettings from '@/composables/useSettings'
+import useApi from '@/composables/useApi'
 
 export default defineComponent({
   components: { NIcon, IconWallpaper, NButton, IconDownload },
@@ -49,7 +49,7 @@ export default defineComponent({
   setup(props) {
     const { refreshSettings } = inject(GlobalData)
     const message = useMessage()
-    const { updateSettings } = useSettings()
+    const { updateSettings } = useApi()
     const handleDownload = () => {
       const params = { src: props.value.url }
       request.post(`/download`, { params })

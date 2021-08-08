@@ -15,14 +15,14 @@
 import { defineComponent, inject, onMounted, onUnmounted, reactive, watch } from 'vue'
 import { NGi, NGrid, NImage, useMessage } from 'naive-ui'
 import ImageItem from '@/components/ImageItem.vue'
-import useImage from '@/composables/useImage'
 import GlobalData from '@/injections/GlobalData'
+import useApi from '@/composables/useApi'
 
 export default defineComponent({
   components: { ImageItem, NImage, NGrid, NGi },
   setup() {
     const { settings, setLoading } = inject(GlobalData)
-    const { getArchiveImages } = useImage()
+    const { getArchiveImages } = useApi()
     const message = useMessage()
     /** @type {IntersectionObserver} */
     let observer
@@ -34,7 +34,7 @@ export default defineComponent({
     const pagination = reactive({ current: 0, pageSize: 8 })
     const fetchImages = () => {
       setLoading(true)
-      return getArchiveImages('/image/archive')
+      return getArchiveImages()
         .then(r => {
           const { current, pageSize, end, items } = r
           data.pagination = { current, pageSize }

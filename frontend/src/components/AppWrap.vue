@@ -30,9 +30,8 @@
 import { computed, defineComponent, h, onMounted, provide, ref, unref, watch } from 'vue'
 import { NMenu, NSelect, NSpin, useMessage, zhCN } from 'naive-ui'
 import GlobalData from '@/injections/GlobalData'
-import useSettings from '@/composables/useSettings'
+import useApi from '@/composables/useApi'
 import { RouterLink } from 'vue-router'
-import useImage from '@/composables/useImage'
 
 export default defineComponent({
   components: {
@@ -58,8 +57,7 @@ export default defineComponent({
     })
     const firstLoad = ref(true)
     const loading = ref(false)
-    const { getAllSettings, updateSettings } = useSettings()
-    const { getAllSources } = useImage()
+    const { getAllSettings, updateSettings, getAllSources } = useApi()
     const message = useMessage()
     const renderMenuLabel = (options) => {
       return h(
