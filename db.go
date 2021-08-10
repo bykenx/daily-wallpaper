@@ -26,5 +26,5 @@ func closeDB() {
 	if err != nil {
 		return
 	}
-	s.Close()
+	_ = s.Close()
 }

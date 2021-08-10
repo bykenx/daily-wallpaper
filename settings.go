@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -43,8 +42,7 @@ func readSettings() Settings {
 func writeSettings(settings Settings) {
 	dst := readSettings()
 	_ = mergo.Merge(&dst, settings, mergo.WithOverride)
-	home, _ := os.UserHomeDir()
-	configFilePath := filepath.Join(home, fmt.Sprintf(".%s", packageName), configFileName)
+	configFilePath := filepath.Join(appHome, configFileName)
 	configBytes, _ := yaml.Marshal(dst)
 	_ = ioutil.WriteFile(configFilePath, configBytes, defaultFileCreatePermission)
 }
