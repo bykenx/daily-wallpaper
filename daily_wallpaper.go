@@ -16,15 +16,16 @@ func onExit() {
 }
 
 func onReady() {
+
+	initSettings()
+	startServer()
+
 	fmt.Println("on Ready.")
 	systray.SetTitle("每日一图")
 	systray.SetIcon(icon.Data)
 	everydayItem := systray.AddMenuItemCheckbox("每日一图", "每日自动更新壁纸", true)
 	moreSettingItem := systray.AddMenuItem("更多设置", "更多设置")
 	quitItem := systray.AddMenuItem("退出", "退出应用程序")
-
-	initSettings()
-	startServer()
 
 	go func() {
 		for {
