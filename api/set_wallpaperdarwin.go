@@ -7,7 +7,7 @@ import (
 	"github.com/andybrewer/mack"
 )
 
-func setWallpaper(path string) error {
+func SetWallpaper(path string) error {
 	res, err := mack.Tell(
 		"Finder",
 		"activate",
