@@ -33,7 +33,7 @@ export default defineComponent({
     const data = reactive({
       items: [],
       pagination: { current: 0, pageSize: 8 },
-      end: false,
+      end: true,
     })
     const fetchImages = () => {
       setLoading(true)
@@ -52,21 +52,19 @@ export default defineComponent({
         })
     }
     watch(loadMore, () => {
-      if (!data.end) {
-        fetchImages()
-      }
+      fetchImages()
     })
     watch(() => unref(settings).currentSource, () => {
       data.items = []
       data.pagination.current = 0
-      data.end = false
+      data.end = true
       setLoadMore()
     })
     onMounted(() => {
       fetchImages()
         .then(() => {
           observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
+            if (entries[0].isIntersecting && !data.end) {
               data.pagination.current += 1
               setLoadMore()
             }
