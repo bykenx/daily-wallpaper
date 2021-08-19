@@ -20,17 +20,14 @@
             <NFormItem path="autoUpdate" label="每天自动更新桌面">
               <NSwitch v-model:value="model.autoUpdate" />
             </NFormItem>
+            <NFormItem v-if="model.autoUpdate" path="timeToUpdate" label="更新时间">
+              <NTimePicker v-model:value="model.timeToUpdate" format="hh:mm" />
+            </NFormItem>
             <NFormItem path="qualityFirst" label="更高品质">
               <NSwitch v-model:value="model.qualityFirst" />
             </NFormItem>
-            <NFormItem v-if="model.autoUpdate" path="timeToUpdate" label="更新时间">
-              <NTimePicker
-                :default-value="defaultTime"
-                v-model:value="model.timeToUpdate"
-              />
-            </NFormItem>
           </NForm>
-          <NButton type="primary">提交</NButton>
+          <NButton type="primary" @click="handleSubmit">提交</NButton>
         </NCol>
       </NRow>
     </div>
@@ -43,17 +40,22 @@ import { NButton, NCol, NForm, NFormItem, NImage, NInput, NRow, NSwitch, NTimePi
 import ImageItem from '@/components/ImageItem.vue'
 import GlobalData from '@/injections/GlobalData'
 import useApi from '@/composables/useApi'
-import useToggle from '@/composables/useToggle'
 
 export default defineComponent({
   components: { ImageItem, NImage, NCol, NRow, NForm, NFormItem, NSwitch, NInput, NTimePicker, NButton },
   setup() {
     const { settings, setLoading } = inject(GlobalData)
     const message = useMessage()
-    const { getTodayImage } = useApi()
+    const { getTodayImage, updateSettings } = useApi()
 
     const todayImage = ref()
-    const formModel = ref({})
+    const formModel = ref({
+      autoUpdate: false,
+      currentImage: '',
+      autoRunAtSystemBoot: false,
+      timeToUpdate: null,
+      qualityFirst: false,
+    })
 
     const fetchImage = () => {
       setLoading(true)
@@ -71,20 +73,41 @@ export default defineComponent({
     onMounted(() => {
       fetchImage()
     })
-    const defaultTime = new Date('2000/01/01 08:00')
-    watch(settings, (value) => {
-      formModel.value = {
-        ...value,
-        timeToUpdate: value.timeToUpdate ? value.timeToUpdate : null,
+    const setFormModel = (value) => {
+      value = { ...value }
+      if (value.timeToUpdate) {
+        value.timeToUpdate = new Date(`2000/01/01 ${value.timeToUpdate}`).getTime()
+      } else {
+        value.timeToUpdate = null
       }
+      formModel.value = value
+    }
+    setFormModel(unref(settings))
+    watch(settings, (value) => {
+      setFormModel(value)
     })
     watch(() => unref(settings).currentSource, () => {
       fetchImage()
     })
+    const handleSubmit = () => {
+      const value = { ...unref(formModel) }
+      if (value.timeToUpdate) {
+        const time = new Date(value.timeToUpdate)
+        const hourStr = time.getHours().toString().padStart(2, '0')
+        const minuteStr = time.getMinutes().toString().padStart(2, '0')
+        const secondStr = time.getSeconds().toString().padStart(2, '0')
+        value.timeToUpdate = `${hourStr}:${minuteStr}:${secondStr}`
+      }
+      console.log('settings: ', value)
+      updateSettings(value)
+        .then(() => {
+          message.success('设置更新成功')
+        })
+    }
     return {
       todayImage,
-      defaultTime,
       model: formModel,
+      handleSubmit,
     }
   },
 })
