@@ -18,9 +18,12 @@ func initSettings() {
 	p := filepath.Join(appHome, configFileName)
 	if !IsFile(p) {
 		settings := Settings{
-			CurrentImage:        "",
-			AutoUpdate:          false,
-			AutoRunAtSystemBoot: false,
+			CurrentSource:       &StringEmpty,
+			CurrentImage:        &StringEmpty,
+			AutoUpdate:          &BooleanFalse,
+			TimeToUpdate:        &StringEmpty,
+			AutoRunAtSystemBoot: &BooleanFalse,
+			QualityFirst:        &BooleanFalse,
 		}
 		configBytes, _ := yaml.Marshal(settings)
 		_ = ioutil.WriteFile(p, configBytes, defaultFileCreatePermission)

@@ -31,8 +31,8 @@ func handleModifySettings(c *gin.Context) {
 		return
 	}
 	writeSettings(settings)
-	if settings.CurrentImage != "" {
-		savedPath, err := downloadFileAndSave(settings.CurrentImage)
+	if settings.CurrentImage != nil && *settings.CurrentImage != "" {
+		savedPath, err := downloadFileAndSave(*settings.CurrentImage)
 		if err != nil {
 			ginJsonError(c, err.Error())
 			return
@@ -52,10 +52,10 @@ func handleGetSources(c *gin.Context) {
 
 func handleTodayImage(c *gin.Context) {
 	name := readSettings().CurrentSource
-	if name == "" {
-		name = "bing"
+	if name == nil || *name == "" {
+		*name = "bing"
 	}
-	source := GetSource(name)
+	source := GetSource(*name)
 	res, err := source.GetToday()
 	if err != nil {
 		ginJsonError(c, err.Error())
@@ -65,10 +65,10 @@ func handleTodayImage(c *gin.Context) {
 
 func handleArchiveImages(c *gin.Context) {
 	name := readSettings().CurrentSource
-	if name == "" {
-		name = "bing"
+	if name == nil || *name == "" {
+		*name = "bing"
 	}
-	source := GetSource(name)
+	source := GetSource(*name)
 	var param sources.ArchiveParam
 	_ = c.ShouldBind(&param)
 	res, err := source.GetArchive(param)
