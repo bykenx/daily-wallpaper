@@ -56,7 +56,7 @@ func MkdirIfNotExists(path string) {
 	_ = os.MkdirAll(path, defaultDirectoryCreatePermission)
 }
 
-func ginJsonError(c *gin.Context, msg string) {
+func GinJsonError(c *gin.Context, msg string) {
 	c.JSON(200, gin.H{
 		"code": 400,
 		"msg":  msg,
@@ -64,7 +64,7 @@ func ginJsonError(c *gin.Context, msg string) {
 	})
 }
 
-func ginJsonResult(c *gin.Context, obj interface{}) {
+func GinJsonResult(c *gin.Context, obj interface{}) {
 	c.JSON(200, gin.H{
 		"code": 200,
 		"data": obj,
