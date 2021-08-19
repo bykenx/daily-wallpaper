@@ -8,10 +8,13 @@ import (
 	"path/filepath"
 )
 
+type SettingsModifyCallback func(settings Settings)
+
 var lastModifyTime int64
 var settings Settings
+var settingsModifyCallback SettingsModifyCallback
 
-func initSettings() {
+func InitSettings() {
 	if !IsDir(appHome) {
 		_ = os.Mkdir(appHome, defaultDirectoryCreatePermission)
 	}
@@ -28,11 +31,11 @@ func initSettings() {
 		configBytes, _ := yaml.Marshal(settings)
 		_ = ioutil.WriteFile(p, configBytes, defaultFileCreatePermission)
 	}
-	settings = readSettings()
+	settings = ReadSettings()
 	lastModifyTime = GetLastModifyTime(p)
 }
 
-func readSettings() Settings {
+func ReadSettings() Settings {
 	p := filepath.Join(appHome, configFileName)
 	if lastModifyTime < GetLastModifyTime(p) {
 		configFilePath := filepath.Join(appHome, configFileName)
@@ -42,10 +45,17 @@ func readSettings() Settings {
 	return settings
 }
 
-func writeSettings(settings Settings) {
-	dst := readSettings()
+func WriteSettings(settings Settings) {
+	dst := ReadSettings()
 	_ = mergo.Merge(&dst, settings, mergo.WithOverride)
 	configFilePath := filepath.Join(appHome, configFileName)
 	configBytes, _ := yaml.Marshal(dst)
+	if settingsModifyCallback != nil {
+		settingsModifyCallback(settings)
+	}
 	_ = ioutil.WriteFile(configFilePath, configBytes, defaultFileCreatePermission)
+}
+
+func RegisterSettingsModifyCallback(callback SettingsModifyCallback) {
+	settingsModifyCallback = callback
 }
