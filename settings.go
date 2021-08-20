@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-type SettingsModifyCallback func(settings Settings)
+type SettingsModifyCallback func(prev, current Settings)
 
 var lastModifyTime int64
 var settings Settings
@@ -47,12 +47,12 @@ func ReadSettings() Settings {
 
 func WriteSettings(settings Settings) {
 	dst := ReadSettings()
+	if settingsModifyCallback != nil {
+		settingsModifyCallback(dst, settings)
+	}
 	_ = mergo.Merge(&dst, settings, mergo.WithOverride)
 	configFilePath := filepath.Join(appHome, configFileName)
 	configBytes, _ := yaml.Marshal(dst)
-	if settingsModifyCallback != nil {
-		settingsModifyCallback(settings)
-	}
 	_ = ioutil.WriteFile(configFilePath, configBytes, defaultFileCreatePermission)
 }
 
