@@ -1,6 +1,7 @@
-package main
+package utils
 
 import (
+	"daily-wallpaper/constant"
 	"daily-wallpaper/sources"
 	"daily-wallpaper/sources/bing_source"
 	"daily-wallpaper/sources/unsplash_source"
@@ -53,7 +54,7 @@ func MkdirIfNotExists(path string) {
 	if IsDirExists(path) {
 		return
 	}
-	_ = os.MkdirAll(path, defaultDirectoryCreatePermission)
+	_ = os.MkdirAll(path, constant.DefaultDirectoryCreatePermission)
 }
 
 func GinJsonError(c *gin.Context, msg string) {

@@ -2,7 +2,12 @@ package main
 
 import (
 	"daily-wallpaper/api"
+	"daily-wallpaper/db"
 	"daily-wallpaper/icon"
+	"daily-wallpaper/server"
+	settings2 "daily-wallpaper/settings"
+	task2 "daily-wallpaper/task"
+	"daily-wallpaper/utils"
 	"fmt"
 	"github.com/getlantern/systray"
 	"log"
@@ -13,30 +18,31 @@ func main() {
 }
 
 func onExit() {
+	db.CloseDB()
 	fmt.Println("on Exit.")
 }
 
 func onReady() {
-
+	db.OpenDB()
 	checkedChan := make(chan bool, 1)
 
-	InitSettings()
-	StartServer()
+	settings := settings2.InitSettings()
+	server.StartServer()
 
-	task := NewTask(func() {
-		settings := ReadSettings()
+	task := task2.NewTask(func() {
+		settings := settings2.ReadSettings()
 		name := settings.CurrentSource
 		if name == nil || *name == "" {
 			*name = "bing"
 		}
-		source := GetSource(*name)
+		source := utils.GetSource(*name)
 		res, err := source.GetToday()
 		if err != nil {
 			log.Printf("任务执行失败: %s\n", err)
 			return
 		}
 		settings.CurrentImage = &res.Url
-		WriteSettings(settings)
+		settings2.WriteSettings(settings)
 	})
 
 	if *settings.AutoUpdate && *settings.TimeToUpdate != "" {
@@ -44,10 +50,10 @@ func onReady() {
 		task.RunAt(*settings.TimeToUpdate).Start()
 	}
 
-	RegisterSettingsModifyCallback(func(prev, current Settings) {
+	settings2.RegisterModifyCallback(func(prev, current settings2.Settings) {
 		if prev.CurrentImage != current.CurrentImage && current.CurrentImage != nil {
 			if *current.CurrentImage != "" {
-				savedPath, err := downloadFileAndSave(*current.CurrentImage)
+				savedPath, err := api.DownloadFileAndSave(*current.CurrentImage)
 				if err != nil {
 					log.Printf("文件下载失败: %s\n", err)
 					return
@@ -102,7 +108,7 @@ func onReady() {
 					fmt.Println("开启每日更新")
 				}
 			case <-moreSettingItem.ClickedCh:
-				OpenUrl("http://127.0.0.1:3000")
+				utils.OpenUrl("http://127.0.0.1:3000")
 			case v := <-checkedChan:
 				if v {
 					everydayItem.Check()

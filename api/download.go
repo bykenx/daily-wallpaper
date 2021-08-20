@@ -1,7 +1,11 @@
-package main
+package api
 
 import (
+	"daily-wallpaper/constant"
+	"daily-wallpaper/db"
+	"daily-wallpaper/models"
 	"daily-wallpaper/sources"
+	"daily-wallpaper/utils"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -30,10 +34,10 @@ func (e DownloadError) Error() string {
 	return e.msg
 }
 
-func downloadFileAndSave(url string) (string, error) {
-	history := DownloadHistory{}
-	db.Where(&DownloadHistory{Url: url}).First(&history)
-	if history.Dir != "" && IsFile(history.Dir) {
+func DownloadFileAndSave(url string) (string, error) {
+	history := models.DownloadHistory{}
+	db.DB().Where(&models.DownloadHistory{Url: url}).First(&history)
+	if history.Dir != "" && utils.IsFile(history.Dir) {
 		return history.Dir, nil
 	}
 	bytes, suffix, err := downloadSource(url)
@@ -45,13 +49,13 @@ func downloadFileAndSave(url string) (string, error) {
 		return "", DownloadError{msg: "不支持保存的文件类型"}
 	}
 	fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), suffix)
-	categoryPath := filepath.Join(appHome, category)
-	MkdirIfNotExists(categoryPath)
+	categoryPath := filepath.Join(constant.AppHome, category)
+	utils.MkdirIfNotExists(categoryPath)
 	filePath := filepath.Join(categoryPath, fileName)
-	_ = ioutil.WriteFile(filePath, bytes, defaultFileCreatePermission)
+	_ = ioutil.WriteFile(filePath, bytes, constant.DefaultFileCreatePermission)
 	history.Url = url
 	history.Dir = filePath
-	db.Save(&history)
+	db.DB().Save(&history)
 	return filePath, nil
 }
 
