@@ -1,8 +1,11 @@
-package main
+package server
 
 import (
 	"context"
+	"daily-wallpaper/api"
+	settings2 "daily-wallpaper/settings"
 	"daily-wallpaper/sources"
+	"daily-wallpaper/utils"
 	"log"
 	"net/http"
 	"os"
@@ -14,72 +17,71 @@ import (
 )
 
 func handleFrontend(c *gin.Context) {
-
 }
 
 func handleGetAllSettings(c *gin.Context) {
-	settings := ReadSettings()
-	GinJsonResult(c, settings)
+	settings := settings2.ReadSettings()
+	utils.GinJsonResult(c, settings)
 }
 
 func handleModifySettings(c *gin.Context) {
-	var settings Settings
+	var settings settings2.Settings
 	err := c.ShouldBind(&settings)
 	if err != nil {
-		GinJsonError(c, err.Error())
+		utils.GinJsonError(c, err.Error())
 		return
 	}
-	WriteSettings(settings)
-	GinJsonResult(c, "数据修改成功")
+	settings2.WriteSettings(settings)
+	utils.GinJsonResult(c, "数据修改成功")
 }
 
 func handleGetSources(c *gin.Context) {
-	GinJsonResult(c, GetDescriptions())
+	utils.GinJsonResult(c, utils.GetDescriptions())
 }
 
 func handleTodayImage(c *gin.Context) {
-	name := ReadSettings().CurrentSource
+	name := settings2.ReadSettings().CurrentSource
 	if name == nil || *name == "" {
 		*name = "bing"
 	}
-	source := GetSource(*name)
+	source := utils.GetSource(*name)
 	res, err := source.GetToday()
 	if err != nil {
-		GinJsonError(c, err.Error())
+		utils.GinJsonError(c, err.Error())
 	}
-	GinJsonResult(c, res)
+	utils.GinJsonResult(c, res)
 }
 
 func handleArchiveImages(c *gin.Context) {
-	name := ReadSettings().CurrentSource
+	name := settings2.ReadSettings().CurrentSource
 	if name == nil || *name == "" {
 		*name = "bing"
 	}
-	source := GetSource(*name)
+	source := utils.GetSource(*name)
 	var param sources.ArchiveParam
 	_ = c.ShouldBind(&param)
 	res, err := source.GetArchive(param)
 	if err != nil {
-		GinJsonError(c, err.Error())
+		utils.GinJsonError(c, err.Error())
 	}
-	GinJsonResult(c, res)
+	utils.GinJsonResult(c, res)
 }
 
 func handleDownload(c *gin.Context) {
 	link := c.Query("src")
 	if link == "" {
-		GinJsonError(c, "请指定链接地址")
+		utils.GinJsonError(c, "请指定链接地址")
 		return
 	}
-	savedPath, err := downloadFileAndSave(link)
+	savedPath, err := api.DownloadFileAndSave(link)
 	if err != nil {
-		GinJsonError(c, err.Error())
+		utils.GinJsonError(c, err.Error())
 		return
 	}
-	GinJsonResult(c, savedPath)
+	utils.GinJsonResult(c, savedPath)
 }
 
-func StartServer() chan struct{} {
+func StartServer() {
 	router := gin.Default()
 	{
 		router.GET("", handleFrontend)
@@ -95,14 +97,11 @@ func StartServer() chan struct{} {
 		Handler: router,
 	}
 	go func() {
-		openDB()
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %s\n", err)
 		}
-		closeDB()
 	}()
-	closeChan := make(chan struct{})
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	stopServer := func() {
@@ -116,11 +115,8 @@ func StartServer() chan struct{} {
 	}
 	go func() {
 		select {
-		case <-closeChan:
-			stopServer()
 		case <-quit:
 			stopServer()
 		}
 	}()
-	return closeChan
 }
