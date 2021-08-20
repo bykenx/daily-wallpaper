@@ -21,7 +21,7 @@
               <NSwitch v-model:value="model.autoUpdate" />
             </NFormItem>
             <NFormItem v-if="model.autoUpdate" path="timeToUpdate" label="更新时间">
-              <NTimePicker v-model:value="model.timeToUpdate" format="hh:mm" />
+              <NTimePicker v-model:value="model.timeToUpdate" format="HH:mm" />
             </NFormItem>
             <NFormItem path="qualityFirst" label="更高品质">
               <NSwitch v-model:value="model.qualityFirst" />
@@ -98,7 +98,6 @@ export default defineComponent({
         const secondStr = time.getSeconds().toString().padStart(2, '0')
         value.timeToUpdate = `${hourStr}:${minuteStr}:${secondStr}`
       }
-      console.log('settings: ', value)
       updateSettings(value)
         .then(() => {
           message.success('设置更新成功')
