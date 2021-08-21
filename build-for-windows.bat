@@ -1,1 +1,1 @@
-go build -o dist/daily_wallpaper -ldflags="-H windowsgui"
+go build -o dist/daily_wallpaper.exe -ldflags="-H windowsgui"
