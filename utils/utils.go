@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 )
 
@@ -96,4 +97,12 @@ func GetDescriptions() []sources.Description {
 		{Name: "bing", Description: "bing壁纸", Enabled: true},
 		{Name: "unsplash", Description: "Unsplash", Enabled: true},
 	}
+}
+
+func GetCwd() string {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dir
 }

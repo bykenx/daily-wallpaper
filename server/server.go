@@ -10,14 +10,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 )
-
-func handleFrontend(c *gin.Context) {
-}
 
 func handleGetAllSettings(c *gin.Context) {
 	settings := settings2.ReadSettings()
@@ -83,8 +82,8 @@ func handleDownload(c *gin.Context) {
 
 func StartServer() {
 	router := gin.Default()
+	router.Use(static.Serve("/", static.LocalFile(filepath.Join(utils.GetCwd(), "static"), true)))
 	{
-		router.GET("", handleFrontend)
 		router.GET("api/settings", handleGetAllSettings)
 		router.PUT("api/settings", handleModifySettings)
 		router.GET("api/image/sources", handleGetSources)
