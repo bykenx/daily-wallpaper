@@ -12,6 +12,7 @@
         </div>
         <NMenu
           mode="horizontal"
+          :value="currentMenuItem"
           :options="menuItems"
           :render-label="renderMenuLabel"
         />
@@ -31,7 +32,7 @@ import { computed, defineComponent, h, onMounted, provide, ref, unref, watch } f
 import { NMenu, NSelect, NSpin, useMessage, zhCN } from 'naive-ui'
 import GlobalData from '@/injections/GlobalData'
 import useApi from '@/composables/useApi'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 export default defineComponent({
   components: {
@@ -48,6 +49,7 @@ export default defineComponent({
     const settings = ref({})
     const refresh = ref(false)
     const sourceOptions = ref([])
+    const route = useRoute()
     const refreshSettings = () => refresh.value = !refresh.value
     const setLoading = (value) => loading.value = value
     provide(GlobalData, {
@@ -62,7 +64,7 @@ export default defineComponent({
     const renderMenuLabel = (options) => {
       return h(
         RouterLink,
-        { to: options.key },
+        { to: { name: options.key } },
         { default: () => options.label },
       )
     }
@@ -119,10 +121,12 @@ export default defineComponent({
           firstLoad.value = false
         })
     })
+    const currentMenuItem = computed(() => route.name)
     return {
       zhCN,
       loading,
       settings,
+      currentMenuItem,
       menuItems,
       firstLoad,
       renderMenuLabel,
