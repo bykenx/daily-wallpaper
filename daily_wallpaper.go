@@ -23,10 +23,10 @@ func onExit() {
 }
 
 func onReady() {
-	db.OpenDB()
 	checkedChan := make(chan bool, 1)
 
 	settings := settings2.InitSettings()
+	db.OpenDB()
 	server.StartServer()
 
 	task := task2.NewTask(func() {
