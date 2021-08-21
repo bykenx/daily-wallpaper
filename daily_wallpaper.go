@@ -108,7 +108,7 @@ func onReady() {
 					fmt.Println("开启每日更新")
 				}
 			case <-moreSettingItem.ClickedCh:
-				utils.OpenUrl("http://127.0.0.1:3000")
+				utils.OpenUrl("http://127.0.0.1:9001")
 			case v := <-checkedChan:
 				if v {
 					everydayItem.Check()

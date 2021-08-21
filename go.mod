@@ -6,6 +6,7 @@ require (
 	github.com/anaskhan96/soup v1.2.4
 	github.com/andybrewer/mack v0.0.0-20200226161639-15be3d47cc54
 	github.com/getlantern/systray v1.1.0
+	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/gin-gonic/gin v1.7.2
 	github.com/google/go-querystring v1.1.0
 	github.com/imdario/mergo v0.3.12
