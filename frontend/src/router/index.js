@@ -7,7 +7,7 @@ import Local from '@/pages/Local.vue'
 export default createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: '/', redirect: 'Home' },
+    { path: '/', redirect: '/home' },
     { name: 'Home', path: '/home', component: Home },
     { name: 'More', path: '/more', component: More },
     { name: 'Local', path: '/local', component: Local },
