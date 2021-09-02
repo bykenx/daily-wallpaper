@@ -45,7 +45,7 @@ func (u UnsplashSource) GetToday() (sources.TodayResponse, error) {
 			}
 		}
 	}
-	log.Fatal("查找节点失败")
+	log.Println("查找节点失败")
 	return sources.TodayResponse{}, nil
 }
 
