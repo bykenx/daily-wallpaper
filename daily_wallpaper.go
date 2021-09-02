@@ -8,7 +8,6 @@ import (
 	settings2 "daily-wallpaper/settings"
 	task2 "daily-wallpaper/task"
 	"daily-wallpaper/utils"
-	"fmt"
 	"github.com/getlantern/systray"
 	"log"
 )
@@ -19,7 +18,7 @@ func main() {
 
 func onExit() {
 	db.CloseDB()
-	fmt.Println("on Exit.")
+	log.Println("on Exit.")
 }
 
 func onReady() {
@@ -95,17 +94,17 @@ func onReady() {
 		for {
 			select {
 			case <-quitItem.ClickedCh:
-				fmt.Println("Exit App.")
+				log.Println("Exit App.")
 				systray.Quit()
 			case <-everydayItem.ClickedCh:
 				if everydayItem.Checked() {
 					everydayItem.Uncheck()
 					task.Stop()
-					fmt.Println("关闭每日一图")
+					log.Println("关闭每日一图")
 				} else {
 					everydayItem.Check()
 					task.Start()
-					fmt.Println("开启每日更新")
+					log.Println("开启每日更新")
 				}
 			case <-moreSettingItem.ClickedCh:
 				utils.OpenUrl("http://127.0.0.1:9001")

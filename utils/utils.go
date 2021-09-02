@@ -23,7 +23,7 @@ func OpenUrl(url string) {
 	case "linux":
 		_ = exec.Command(`xdg-open`, url).Start()
 	default:
-		log.Fatal("Unsupported platform.")
+		log.Println("Unsupported platform.")
 	}
 }
 
@@ -102,7 +102,7 @@ func GetDescriptions() []sources.Description {
 func GetCwd() string {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	return dir
 }
