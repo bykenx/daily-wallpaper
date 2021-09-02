@@ -3,7 +3,9 @@ package task
 import (
 	"fmt"
 	"github.com/robfig/cron/v3"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var c *cron.Cron
@@ -17,6 +19,9 @@ type Task struct {
 func (t *Task) Start() {
 	if t.Time == "" {
 		return
+	}
+	if isArriveAtTime(t.Time) {
+		t.Callback()
 	}
 	if t.Id == 0 {
 		t.Id, _ = c.AddFunc(getCronSpec(t.Time), t.Callback)
@@ -57,4 +62,14 @@ func getCronSpec(time string) string {
 	hour := l[0]
 	minute := l[1]
 	return fmt.Sprintf("%s %s * * *", minute, hour)
+}
+
+func isArriveAtTime(t string) bool {
+	p := strings.Split(t, "")
+	n := time.Now()
+	h, _ := strconv.Atoi(p[0])
+	m, _ := strconv.Atoi(p[1])
+	t1 := h * 60 + m
+	t2 := n.Hour() * 60 + m
+	return t2 >= t1
 }

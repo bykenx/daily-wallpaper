@@ -30,18 +30,13 @@ func onReady() {
 
 	task := task2.NewTask(func() {
 		settings := settings2.ReadSettings()
-		name := settings.CurrentSource
-		if name == nil || *name == "" {
-			*name = "bing"
-		}
-		source := utils.GetSource(*name)
+		source := utils.GetSource(*settings.CurrentSource)
 		res, err := source.GetToday()
 		if err != nil {
 			log.Printf("任务执行失败: %s\n", err)
 			return
 		}
-		settings.CurrentImage = &res.Url
-		settings2.WriteSettings(settings)
+		settings2.WriteSettings(settings2.Settings{CurrentImage: &res.Url})
 	})
 
 	if *settings.AutoUpdate && *settings.TimeToUpdate != "" {
