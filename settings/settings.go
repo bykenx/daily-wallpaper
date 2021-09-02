@@ -3,11 +3,18 @@ package settings
 import (
 	"daily-wallpaper/constant"
 	"daily-wallpaper/utils"
-	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+)
+
+type ModifyCallback func(settings Settings, changed FieldChanged)
+
+var (
+	lastModifyTime int64
+	settings       Settings
+	modifyCallback ModifyCallback
 )
 
 var (
@@ -24,11 +31,45 @@ type Settings struct {
 	QualityFirst        *bool   `json:"qualityFirst" yaml:"quality_first"`
 }
 
-type ModifyCallback func(prev, current Settings)
+type FieldChanged int
 
-var lastModifyTime int64
-var settings Settings
-var modifyCallback ModifyCallback
+const (
+	CurrentSourceChanged = 1 << iota
+	CurrentImageChanged
+	AutoUpdateChanged
+	TimeToUpdateChanged
+	AutoRunAtSystemBootChanged
+	QualityFirstChanged
+)
+
+func mergeSettings(dst *Settings, src Settings) (res FieldChanged) {
+	res = 0
+	if src.CurrentSource != nil && dst.CurrentSource != src.CurrentSource {
+		dst.CurrentSource = src.CurrentSource
+		res += CurrentSourceChanged
+	}
+	if src.CurrentImage != nil && dst.CurrentImage != src.CurrentImage {
+		dst.CurrentImage = src.CurrentImage
+		res += CurrentImageChanged
+	}
+	if src.AutoUpdate != nil && dst.AutoUpdate != src.AutoUpdate {
+		dst.AutoUpdate = src.AutoUpdate
+		res += AutoUpdateChanged
+	}
+	if src.TimeToUpdate != nil && dst.TimeToUpdate != src.TimeToUpdate {
+		dst.TimeToUpdate = src.TimeToUpdate
+		res += TimeToUpdateChanged
+	}
+	if src.AutoRunAtSystemBoot != nil && dst.AutoRunAtSystemBoot != src.AutoRunAtSystemBoot {
+		dst.AutoRunAtSystemBoot = src.AutoRunAtSystemBoot
+		res += AutoRunAtSystemBootChanged
+	}
+	if src.QualityFirst != nil && dst.QualityFirst != src.QualityFirst {
+		dst.QualityFirst = src.QualityFirst
+		res += QualityFirstChanged
+	}
+	return
+}
 
 func InitSettings() Settings {
 	if !utils.IsDir(constant.AppHome) {
@@ -62,12 +103,12 @@ func ReadSettings() Settings {
 	return settings
 }
 
-func WriteSettings(settings Settings) {
+func WriteSettings(src Settings) {
 	dst := ReadSettings()
-	if modifyCallback != nil {
-		modifyCallback(dst, settings)
+	res := mergeSettings(&dst, src)
+	if res != 0 && modifyCallback != nil {
+		modifyCallback(dst, res)
 	}
-	_ = mergo.Merge(&dst, settings, mergo.WithOverride)
 	configFilePath := filepath.Join(constant.AppHome, constant.ConfigFileName)
 	configBytes, _ := yaml.Marshal(dst)
 	_ = ioutil.WriteFile(configFilePath, configBytes, constant.DefaultFileCreatePermission)

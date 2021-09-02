@@ -49,30 +49,26 @@ func onReady() {
 		task.RunAt(*settings.TimeToUpdate).Start()
 	}
 
-	settings2.RegisterModifyCallback(func(prev, current settings2.Settings) {
-		if prev.CurrentImage != current.CurrentImage && current.CurrentImage != nil {
-			if *current.CurrentImage != "" {
-				savedPath, err := api.DownloadFileAndSave(*current.CurrentImage)
-				if err != nil {
-					log.Printf("文件下载失败: %s\n", err)
-					return
-				}
-				err = api.SetWallpaper(savedPath)
-				if err != nil {
-					log.Printf("设置壁纸失败: %s\n", err)
-					return
-				}
-				log.Println("切换壁纸成功")
+	settings2.RegisterModifyCallback(func(s settings2.Settings, changed settings2.FieldChanged) {
+		if changed&settings2.CurrentSourceChanged != 0 {
+			savedPath, err := api.DownloadFileAndSave(*s.CurrentImage)
+			if err != nil {
+				log.Printf("文件下载失败: %s\n", err)
+				return
 			}
-		}
-		if prev.TimeToUpdate != current.TimeToUpdate && current.TimeToUpdate != nil {
-			if *current.TimeToUpdate != "" {
-				log.Printf("更新时间设置为: %s", *current.TimeToUpdate)
-				task.RunAt(*current.TimeToUpdate)
+			err = api.SetWallpaper(savedPath)
+			if err != nil {
+				log.Printf("设置壁纸失败: %s\n", err)
+				return
 			}
+			log.Println("切换壁纸成功")
 		}
-		if prev.AutoUpdate != current.AutoUpdate && current.AutoUpdate != nil {
-			if *current.AutoUpdate {
+		if changed&settings2.TimeToUpdateChanged != 0 {
+			log.Printf("更新时间设置为: %s", *s.TimeToUpdate)
+			task.RunAt(*s.TimeToUpdate)
+		}
+		if changed&settings2.AutoUpdateChanged != 0 {
+			if *s.AutoUpdate {
 				log.Println("开启自动更新")
 				checkedChan <- true
 				task.Restart()
@@ -84,7 +80,7 @@ func onReady() {
 		}
 	})
 
-	systray.SetTitle("每日一图")
+	//systray.SetTitle("每日一图")
 	systray.SetIcon(icon.Data)
 	everydayItem := systray.AddMenuItemCheckbox("每日一图", "每日自动更新壁纸", *settings.AutoUpdate)
 	moreSettingItem := systray.AddMenuItem("更多设置", "更多设置")
@@ -97,15 +93,8 @@ func onReady() {
 				log.Println("Exit App.")
 				systray.Quit()
 			case <-everydayItem.ClickedCh:
-				if everydayItem.Checked() {
-					everydayItem.Uncheck()
-					task.Stop()
-					log.Println("关闭每日一图")
-				} else {
-					everydayItem.Check()
-					task.Start()
-					log.Println("开启每日更新")
-				}
+				checked := !everydayItem.Checked()
+				settings2.WriteSettings(settings2.Settings{AutoUpdate: &checked})
 			case <-moreSettingItem.ClickedCh:
 				utils.OpenUrl("http://127.0.0.1:9001")
 			case v := <-checkedChan:
