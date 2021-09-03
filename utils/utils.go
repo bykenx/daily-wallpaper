@@ -13,8 +13,9 @@ import (
 	"runtime"
 )
 
+var platform = runtime.GOOS
+
 func OpenUrl(url string) {
-	platform := runtime.GOOS
 	switch platform {
 	case "windows":
 		_ = exec.Command(`cmd`, `/c`, `start`, url).Start()
@@ -105,4 +106,16 @@ func GetCwd() string {
 		log.Println(err)
 	}
 	return dir
+}
+
+func GetStaticPath() string {
+	cwd := GetCwd()
+	switch platform {
+	case "windows":
+		return filepath.Join(cwd, "static")
+	case "darwin":
+		return filepath.Join(filepath.Dir(cwd), "Resources", "static")
+	default:
+		return filepath.Join(cwd, "static")
+	}
 }

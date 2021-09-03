@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 	"time"
 
@@ -82,7 +81,7 @@ func handleDownload(c *gin.Context) {
 
 func StartServer() {
 	router := gin.Default()
-	router.Use(static.Serve("/", static.LocalFile(filepath.Join(utils.GetCwd(), "static"), true)))
+	router.Use(static.Serve("/", static.LocalFile(utils.GetStaticPath(), true)))
 	{
 		router.GET("api/settings", handleGetAllSettings)
 		router.PUT("api/settings", handleModifySettings)
