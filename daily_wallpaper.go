@@ -8,8 +8,9 @@ import (
 	settings2 "daily-wallpaper/settings"
 	task2 "daily-wallpaper/task"
 	"daily-wallpaper/utils"
-	"github.com/getlantern/systray"
 	"log"
+
+	"github.com/getlantern/systray"
 )
 
 func main() {
@@ -23,6 +24,7 @@ func onExit() {
 
 func onReady() {
 	checkedChan := make(chan bool, 1)
+	checkedChan2 := make(chan bool, 1)
 
 	settings := settings2.InitSettings()
 	db.OpenDB()
@@ -73,10 +75,21 @@ func onReady() {
 				task.Stop()
 			}
 		}
+		if changed&settings2.AutoRunAtSystemBootChanged != 0 {
+			if *s.AutoRunAtSystemBoot {
+				log.Println("开启开机自启")
+				checkedChan2 <- true
+			} else {
+				log.Println("关闭开机自启")
+				checkedChan2 <- false
+			}
+			api.SetStartAtLogin(*s.AutoRunAtSystemBoot)
+		}
 	})
 
 	//systray.SetTitle("每日一图")
 	systray.SetIcon(icon.Data)
+	startAtLoginItem := systray.AddMenuItemCheckbox("开机自启", "开机自启", *settings.AutoRunAtSystemBoot)
 	everydayItem := systray.AddMenuItemCheckbox("每日一图", "每日自动更新壁纸", *settings.AutoUpdate)
 	moreSettingItem := systray.AddMenuItem("更多设置", "更多设置")
 	quitItem := systray.AddMenuItem("退出", "退出应用程序")
@@ -92,11 +105,20 @@ func onReady() {
 				settings2.WriteSettings(settings2.Settings{AutoUpdate: &checked})
 			case <-moreSettingItem.ClickedCh:
 				utils.OpenUrl("http://127.0.0.1:9001")
+			case <-startAtLoginItem.ClickedCh:
+				checked := !startAtLoginItem.Checked()
+				settings2.WriteSettings(settings2.Settings{AutoRunAtSystemBoot: &checked})
 			case v := <-checkedChan:
 				if v {
 					everydayItem.Check()
 				} else {
 					everydayItem.Uncheck()
+				}
+			case v := <-checkedChan2:
+				if v {
+					startAtLoginItem.Check()
+				} else {
+					startAtLoginItem.Uncheck()
 				}
 			}
 		}
