@@ -5,12 +5,13 @@ import (
 	"daily-wallpaper/sources"
 	"daily-wallpaper/sources/bing_source"
 	"daily-wallpaper/sources/unsplash_source"
-	"github.com/gin-gonic/gin"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+
+	"github.com/gin-gonic/gin"
 )
 
 var platform = runtime.GOOS
@@ -46,10 +47,7 @@ func IsFile(path string) bool {
 
 func IsDirExists(path string) bool {
 	_, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func MkdirIfNotExists(path string) {
