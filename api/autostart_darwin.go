@@ -1,4 +1,4 @@
-//+build darwin
+//go:build darwin
 
 package api
 
@@ -85,9 +85,9 @@ import "C"
 func SetStartAtLogin(startAtLogin bool) bool {
 	var startAtLoginVal C.BOOL
 	if startAtLogin {
-		startAtLoginVal = 1
+		startAtLoginVal = CTypeTrue
 	} else {
-		startAtLoginVal = 0
+		startAtLoginVal = CTypeFalse
 	}
-	return C.setStartAtLogin(C.BOOL(startAtLoginVal)) == 1
+	return C.setStartAtLogin(C.BOOL(startAtLoginVal)) == CTypeTrue
 }
