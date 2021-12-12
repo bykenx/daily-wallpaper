@@ -18,10 +18,12 @@ APP_ICON_SIZES="
 NPM_EXEC=""
 FRONTEND_DIR="$(pwd)/frontend"
 DIST_DIR="$(pwd)/dist"
-PKG_DIR="$DIST_DIR/$APP_NAME.app"
+PKG_NAME="$APP_NAME.app"
+PKG_DIR="$DIST_DIR/$PKG_NAME"
 CONTENT_DIR="$PKG_DIR/Contents"
 RESOURCES_DIR="$CONTENT_DIR/Resources"
 EXEC_DIR="$CONTENT_DIR/MacOS"
+. version.sh
 
 template=$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -47,6 +49,10 @@ EOF
 # 判断依赖
 if [ ! -x "$(command -v svg2png)" ];then
   echo "svg2png 未安装，请通过 Homebrew（brew install svg2png）或其他方式安装"
+  exit -1
+fi
+if [ ! -x "$(command -v 7z)" ];then
+  echo "7zip 未安装，请通过 Homebrew（brew install p7zip）或其他方式安装"
   exit -1
 fi
 if [ -x "$(command -v pnpm)" ];then
@@ -101,3 +107,5 @@ $NPM_EXEC install
 $NPM_EXEC run build
 cd ..
 cp -rf "$FRONTEND_DIR/dist" "$RESOURCES_DIR/static"
+cd "$DIST_DIR"
+7z a "daily-wallpaper-mac-universal-v${VERSION}.7z" "$PKG_NAME"
