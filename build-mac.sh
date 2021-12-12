@@ -47,7 +47,7 @@ EOF
 # 判断依赖
 if [ ! -x "$(command -v svg2png)" ];then
   echo "svg2png 未安装，请通过 Homebrew（brew install svg2png）或其他方式安装"
-  exit 0
+  exit -1
 fi
 if [ -x "$(command -v pnpm)" ];then
   NPM_EXEC=pnpm
@@ -58,6 +58,7 @@ elif [ -x "$(command -v yarn)" ];then
 fi
 if [ -z "$NPM_EXEC" ];then
   echo "请安装nodejs环境，并确保npm、pnpm、yarn任一包管理器已经安装"
+  exit -1
 fi
 
 # 清空文件夹
@@ -88,7 +89,12 @@ done
 iconutil -c icns "$ICONSET"
 rm -rf "$ICONSET"
 # 构建执行文件
-go build -o "$EXEC_DIR/$EXEC_NAME"
+CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o "$DIST_DIR/${EXEC_NAME}_amd64"
+CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o "$DIST_DIR/${EXEC_NAME}_arm64"
+# 合并构建 universal 应用
+lipo -create -output "$EXEC_DIR/$EXEC_NAME" "$DIST_DIR/${EXEC_NAME}_amd64" "$DIST_DIR/${EXEC_NAME}_arm64"
+rm -rf "$DIST_DIR/${EXEC_NAME}_amd64"
+rm -rf "$DIST_DIR/${EXEC_NAME}_arm64"
 # 构建资源文件
 cd "$FRONTEND_DIR"
 $NPM_EXEC install
