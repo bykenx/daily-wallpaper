@@ -5,35 +5,15 @@ import (
 	"daily-wallpaper/sources"
 	"daily-wallpaper/sources/bing_source"
 	"daily-wallpaper/sources/unsplash_source"
-	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
-	"syscall"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/sys/windows"
 )
 
 var platform = runtime.GOOS
-
-func OpenUrl(url string) {
-	switch platform {
-	case "windows":
-		verbPtr, _ := syscall.UTF16PtrFromString("open")
-		filePtr, _ := syscall.UTF16PtrFromString("cmd")
-		argsPtr, _ := syscall.UTF16PtrFromString(fmt.Sprintf("/c start %s", url))
-		windows.ShellExecute(0, verbPtr, filePtr, argsPtr, nil, 0) // hide window
-	case "darwin":
-		_ = exec.Command(`open`, url).Start()
-	case "linux":
-		_ = exec.Command(`xdg-open`, url).Start()
-	default:
-		log.Println("Unsupported platform.")
-	}
-}
 
 func IsDir(path string) bool {
 	stat, err := os.Stat(path)
