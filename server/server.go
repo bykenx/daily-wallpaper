@@ -46,6 +46,7 @@ func handleTodayImage(c *gin.Context) {
 	res, err := source.GetToday()
 	if err != nil {
 		utils.GinJsonError(c, err.Error())
+		return
 	}
 	utils.GinJsonResult(c, res)
 }
@@ -61,6 +62,7 @@ func handleArchiveImages(c *gin.Context) {
 	res, err := source.GetArchive(param)
 	if err != nil {
 		utils.GinJsonError(c, err.Error())
+		return
 	}
 	utils.GinJsonResult(c, res)
 }
@@ -112,9 +114,7 @@ func StartServer() {
 		log.Println("Server stopped.")
 	}
 	go func() {
-		select {
-		case <-quit:
-			stopServer()
-		}
+		<-quit
+		stopServer()
 	}()
 }
