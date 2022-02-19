@@ -1,6 +1,11 @@
 package utils
 
-import "golang.org/x/sys/windows"
+import (
+	"fmt"
+	"syscall"
+
+	"golang.org/x/sys/windows"
+)
 
 func OpenUrl(url string) {
 	verbPtr, _ := syscall.UTF16PtrFromString("open")
