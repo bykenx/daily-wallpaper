@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -81,9 +82,40 @@ func handleDownload(c *gin.Context) {
 	utils.GinJsonResult(c, savedPath)
 }
 
+func serveRoot(urlPrefix, root string) gin.HandlerFunc {
+	// https://github.com/golang/go/issues/32350
+	builtinMimeTypesLower := map[string]string{
+		".css":  "text/css; charset=utf-8",
+		".gif":  "image/gif",
+		".htm":  "text/html; charset=utf-8",
+		".html": "text/html; charset=utf-8",
+		".jpg":  "image/jpeg",
+		".js":   "application/javascript",
+		".wasm": "application/wasm",
+		".pdf":  "application/pdf",
+		".png":  "image/png",
+		".svg":  "image/svg+xml",
+		".xml":  "text/xml; charset=utf-8",
+	}
+	fs := static.LocalFile(root, true)
+	fileserver := http.FileServer(fs)
+	if urlPrefix != "" {
+		fileserver = http.StripPrefix(urlPrefix, fileserver)
+	}
+	return func(c *gin.Context) {
+		if fs.Exists(urlPrefix, c.Request.URL.Path) {
+			if v, ok := builtinMimeTypesLower[filepath.Ext(c.Request.URL.Path)]; ok {
+				c.Writer.Header().Set("Content-Type", v)
+			}
+			fileserver.ServeHTTP(c.Writer, c.Request)
+			c.Abort()
+		}
+	}
+}
+
 func StartServer() {
 	router := gin.Default()
-	router.Use(static.Serve("/", static.LocalFile(utils.GetStaticPath(), true)))
+	router.Use(serveRoot("/", utils.GetStaticPath()))
 	{
 		router.GET("api/settings", handleGetAllSettings)
 		router.PUT("api/settings", handleModifySettings)
