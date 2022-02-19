@@ -11,6 +11,20 @@
 
 🚧 部分功能完成
 
-### 截图
+## 截图
 
-![](screenshoot-1.jpg)
+![](screenshot-1.jpg)
+
+## 构建
+
+### 1.Windows
+
+```powershell
+.\build-windows.ps1
+```
+
+### 2.Mac
+
+```sh
+./build-mac.sh
+```
