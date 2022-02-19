@@ -23,7 +23,7 @@ PKG_DIR="$DIST_DIR/$PKG_NAME"
 CONTENT_DIR="$PKG_DIR/Contents"
 RESOURCES_DIR="$CONTENT_DIR/Resources"
 EXEC_DIR="$CONTENT_DIR/MacOS"
-. version.sh
+VERSION=$(cat version.txt)
 
 template=$(cat << EOF
 <?xml version="1.0" encoding="UTF-8"?>
