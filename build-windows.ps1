@@ -34,6 +34,7 @@ if ($null -eq $NPM_EXEC) {
     Write-Output "  Suggest to use Scoop(https://scoop.sh/) or NVM to install nodejs (scoop install nodejs),"
     Write-Output "  and use pnpm to manage node packages (npm i -g pnpm)."
     Write-Output ""
+    exit
 }
 
 Remove-Item "$DIST" -Recurse -ErrorAction SilentlyContinue
