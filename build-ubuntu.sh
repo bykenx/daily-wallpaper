@@ -43,7 +43,7 @@ cd $FRONT
 $NPM_EXEC install
 $NPM_EXEC build
 cd $CWD
-cp -r "$FRONT/dist" "$DIST/daily_wallpaper/static"
+cp -r "$FRONT/dist" "$DIST/daily_wallpaper"
 cd $DIST
 7z a "daily-wallpaper-linux-amd64-v$VERSION.7z" daily_wallpaper
 cd $CWD

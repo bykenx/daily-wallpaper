@@ -2,9 +2,9 @@ package api
 
 import (
 	"daily-wallpaper/utils"
-	"html/template"
 	"os"
 	"path/filepath"
+	"text/template"
 )
 
 const desktopTemplate = `[Desktop Entry]
