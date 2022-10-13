@@ -1,9 +1,8 @@
-//+build darwin
-
 package api
 
 import (
 	"fmt"
+
 	"github.com/andybrewer/mack"
 )
 
