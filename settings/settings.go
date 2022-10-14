@@ -3,10 +3,11 @@ package settings
 import (
 	"daily-wallpaper/constant"
 	"daily-wallpaper/utils"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/yaml.v2"
 )
 
 type ModifyCallback func(settings Settings, changed FieldChanged)
