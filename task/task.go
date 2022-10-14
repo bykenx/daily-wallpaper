@@ -2,10 +2,11 @@ package task
 
 import (
 	"fmt"
-	"github.com/robfig/cron/v3"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/robfig/cron/v3"
 )
 
 var c *cron.Cron
@@ -65,11 +66,9 @@ func getCronSpec(time string) string {
 }
 
 func isArriveAtTime(t string) bool {
-	p := strings.Split(t, "")
-	n := time.Now()
-	h, _ := strconv.Atoi(p[0])
-	m, _ := strconv.Atoi(p[1])
-	t1 := h * 60 + m
-	t2 := n.Hour() * 60 + m
-	return t2 >= t1
+	parts := strings.Split(t, ":")
+	now := time.Now()
+	hour, _ := strconv.Atoi(parts[0])
+	minute, _ := strconv.Atoi(parts[1])
+	return now.Hour()*60+now.Minute() >= hour*60+minute
 }
