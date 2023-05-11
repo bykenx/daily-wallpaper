@@ -48,7 +48,7 @@ func onReady() {
 
 	settings2.RegisterModifyCallback(func(s settings2.Settings, changed settings2.FieldChanged) {
 		if changed&settings2.CurrentImageChanged != 0 {
-			savedPath, err := api.DownloadFileAndSave(*s.CurrentImage)
+			savedPath, err := api.GetOrDownload(*s.CurrentImage)
 			if err != nil {
 				log.Printf("文件下载失败: %s\n", err)
 				return

@@ -11,11 +11,13 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/render"
 )
 
 func handleGetAllSettings(c *gin.Context) {
@@ -68,18 +70,30 @@ func handleArchiveImages(c *gin.Context) {
 	utils.GinJsonResult(c, res)
 }
 
-func handleDownload(c *gin.Context) {
-	link := c.Query("src")
-	if link == "" {
-		utils.GinJsonError(c, "请指定链接地址")
-		return
+func handleGetImage(c *gin.Context) {
+	link := c.Query("link")
+	if dir, err := api.GetOrDownload(link); err == nil {
+		if content, err := os.ReadFile(dir); err == nil {
+			c.Render(http.StatusOK, render.Data{
+				ContentType: http.DetectContentType(content),
+				Data:        content,
+			})
+			return
+		}
 	}
-	savedPath, err := api.DownloadFileAndSave(link)
-	if err != nil {
-		utils.GinJsonError(c, err.Error())
-		return
+	c.String(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+}
+
+func handleGetImageList(c *gin.Context) {
+	var start int
+	var limit int
+	if num, err := strconv.Atoi(c.Query("start")); err == nil {
+		start = num
 	}
-	utils.GinJsonResult(c, savedPath)
+	if num, err := strconv.Atoi(c.Query("limit")); err == nil {
+		limit = num
+	}
+	utils.GinJsonResult(c, api.GetImageListPagination(start, limit))
 }
 
 func serveRoot(urlPrefix, root string) gin.HandlerFunc {
@@ -122,7 +136,8 @@ func StartServer() {
 		router.GET("api/image/sources", handleGetSources)
 		router.GET("api/image/archive", handleArchiveImages)
 		router.GET("api/image/today", handleTodayImage)
-		router.POST("api/download", handleDownload)
+		router.GET("api/image/get", handleGetImage)
+		router.GET("api/image/list", handleGetImageList)
 	}
 	server := &http.Server{
 		Addr:    ":9001",

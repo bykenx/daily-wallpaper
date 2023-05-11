@@ -28,6 +28,10 @@ function getTodayImage() {
   return wrappedErrHandleGet(`/image/today`)
 }
 
+function getImageList(params) {
+  return wrappedErrHandleGet(`/image/list`, { params })
+}
+
 export default function useApi() {
   return {
     getAllSettings,
@@ -35,5 +39,6 @@ export default function useApi() {
     getAllSources,
     getArchiveImages,
     getTodayImage,
+    getImageList,
   }
 }

@@ -1,22 +1,11 @@
 <template>
   <div class="ImageItem">
-    <img
-      :src="value.url"
-      alt=""
-    >
+    <img :src="`/api/image/get?link=${encodeURIComponent(value.url)}`" alt="">
     <div class="ImageItem-mask" />
     <div class="ImageItem-toolbar">
       <div class="ImageItem-toolbar-desc">
         {{ value.copyright }}
       </div>
-      <NButton text @click="handleDownload">
-        <template #icon>
-          <NIcon size="20">
-            <IconDownload />
-          </NIcon>
-        </template>
-        下载该图
-      </NButton>
       <NButton text @click="handleSetWallpaper">
         <template #icon>
           <NIcon size="20">
@@ -30,13 +19,12 @@
 </template>
 
 <script>
-import { defineComponent, inject, unref } from 'vue'
-import { NButton, NIcon, useMessage } from 'naive-ui'
-import IconWallpaper from '@/assets/icon-wallpaper.svg'
 import IconDownload from '@/assets/icon-download.svg'
-import request from '@/utils/request'
-import GlobalData from '@/injections/GlobalData'
+import IconWallpaper from '@/assets/icon-wallpaper.svg'
 import useApi from '@/composables/useApi'
+import GlobalData from '@/injections/GlobalData'
+import { NButton, NIcon, useMessage } from 'naive-ui'
+import { defineComponent, inject, unref } from 'vue'
 
 export default defineComponent({
   components: { NIcon, IconWallpaper, NButton, IconDownload },
@@ -50,17 +38,6 @@ export default defineComponent({
     const { settings, refreshSettings } = inject(GlobalData)
     const message = useMessage()
     const { updateSettings } = useApi()
-    const handleDownload = () => {
-      const params = { src: props.value.url }
-      request.post(`/download`, { params })
-        .then(res => {
-          if (res.code === 200) {
-            message.success('保存成功')
-          } else {
-            message.error(res?.msg ?? '服务器错误')
-          }
-        })
-    }
 
     const handleSetWallpaper = () => {
       const { url, urlHS } = props.value
@@ -78,7 +55,6 @@ export default defineComponent({
         })
     }
     return {
-      handleDownload,
       handleSetWallpaper,
     }
   },
@@ -134,12 +110,10 @@ export default defineComponent({
     box-sizing: border-box;
     height: 4rem;
     background: rgba(255, 255, 255, 0.7);
-
-    & > * {
-      margin-left: 1rem;
-    }
+    gap: 1rem;
 
     &-desc {
+      flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;

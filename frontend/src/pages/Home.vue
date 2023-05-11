@@ -35,6 +35,8 @@
 </template>
 
 <script>
+// @ts-check
+
 import { defineComponent, inject, onMounted, ref, unref, watch } from 'vue'
 import { NButton, NCol, NForm, NFormItem, NImage, NInput, NRow, NSwitch, NTimePicker, useMessage } from 'naive-ui'
 import ImageItem from '@/components/ImageItem.vue'

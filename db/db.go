@@ -1,11 +1,16 @@
 package db
 
 import (
+	"crypto/sha1"
 	"daily-wallpaper/constant"
 	"daily-wallpaper/models"
+	"daily-wallpaper/utils"
+	"encoding/hex"
+	"os"
+	"path/filepath"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"path/filepath"
 )
 
 var db *gorm.DB
@@ -17,7 +22,32 @@ func OpenDB() {
 	if err != nil {
 		panic("failed to connect to database")
 	}
-	err = db.AutoMigrate(&models.DownloadHistory{})
+
+	if db.Migrator().HasTable("download_histories") {
+		db.Migrator().RenameTable("download_histories", &models.ImageItem{})
+	} else {
+		err = db.AutoMigrate(&models.ImageItem{})
+	}
+
+	{
+		// 迁移数据
+		var list []models.ImageItem
+
+		db.Where("sha1 is null OR trim(sha1) = '' AND valid = 1").Find(&list)
+
+		for _, item := range list {
+			println(item.Dir)
+			if utils.IsFile(item.Dir) {
+				data, _ := os.ReadFile(item.Dir)
+				sum := sha1.Sum(data)
+				item.Sha1 = hex.EncodeToString(sum[:])
+			} else {
+				item.Valid = false
+			}
+			db.Updates(item)
+		}
+	}
+
 	if err != nil {
 		panic("failed to migrate db model")
 	}

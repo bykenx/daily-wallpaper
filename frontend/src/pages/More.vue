@@ -12,6 +12,8 @@
 </template>
 
 <script>
+// @ts-check
+
 import { defineComponent, inject, onMounted, onUnmounted, reactive, unref, watch } from 'vue'
 import { NGi, NGrid, NImage, useMessage } from 'naive-ui'
 import ImageItem from '@/components/ImageItem.vue'

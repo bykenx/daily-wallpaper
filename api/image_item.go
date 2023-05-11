@@ -34,12 +34,18 @@ func (e DownloadError) Error() string {
 	return e.msg
 }
 
-func DownloadFileAndSave(url string) (string, error) {
-	history := models.DownloadHistory{}
-	db.DB().Where(&models.DownloadHistory{Url: url}).First(&history)
-	if history.Dir != "" && utils.IsFile(history.Dir) {
-		return history.Dir, nil
+func GetOrDownload(url string) (string, error) {
+	var model models.ImageItem
+	result := db.DB().Where(&models.ImageItem{Url: url, Valid: true}).First(&model)
+	if result.Error == nil {
+		if utils.IsFile(model.Dir) {
+			return model.Dir, nil
+		} else {
+			model.Valid = false
+			db.DB().Updates(model)
+		}
 	}
+	var newModel models.ImageItem
 	bytes, suffix, err := downloadSource(url)
 	if err != nil {
 		return "", DownloadError{msg: err.Error()}
@@ -53,10 +59,24 @@ func DownloadFileAndSave(url string) (string, error) {
 	utils.MkdirIfNotExists(categoryPath)
 	filePath := filepath.Join(categoryPath, fileName)
 	_ = ioutil.WriteFile(filePath, bytes, constant.DefaultFileCreatePermission)
-	history.Url = url
-	history.Dir = filePath
-	db.DB().Save(&history)
+	newModel.Url = url
+	newModel.Dir = filePath
+	db.DB().Save(&newModel)
 	return filePath, nil
+}
+
+func GetImageListPagination(start, limit int) []string {
+	if limit <= 0 {
+		limit = 10
+	}
+	offset := start * limit
+	var list []models.ImageItem
+	var resultList []string
+	db.DB().Limit(limit).Offset(offset).Find(&list)
+	for _, item := range list {
+		resultList = append(resultList, item.Url)
+	}
+	return resultList
 }
 
 func downloadSource(url string) ([]byte, string, error) {
