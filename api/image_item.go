@@ -72,7 +72,7 @@ func GetImageListPagination(start, limit int) []string {
 	offset := start * limit
 	var list []models.ImageItem
 	var resultList []string
-	db.DB().Limit(limit).Offset(offset).Find(&list)
+	db.DB().Where(&models.ImageItem{Valid: true}).Order("create_time DESC").Limit(limit).Offset(offset).Find(&list)
 	for _, item := range list {
 		resultList = append(resultList, item.Url)
 	}
