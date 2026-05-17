@@ -88,7 +88,7 @@ func onReady() {
 	})
 
 	//systray.SetTitle("每日一图")
-	systray.SetIcon(icon.Data)
+	api.SetTrayIcon(icon.Data)
 	startAtLoginItem := systray.AddMenuItemCheckbox("开机自启", "开机自启", *settings.AutoRunAtSystemBoot)
 	everydayItem := systray.AddMenuItemCheckbox("每日一图", "每日自动更新壁纸", *settings.AutoUpdate)
 	moreSettingItem := systray.AddMenuItem("更多设置", "更多设置")
