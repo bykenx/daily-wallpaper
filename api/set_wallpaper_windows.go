@@ -1,10 +1,11 @@
-//+build windows
+//go:build windows
 
 package api
 
 import (
-	"golang.org/x/sys/windows"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 var (

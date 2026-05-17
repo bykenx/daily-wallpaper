@@ -18,11 +18,6 @@ APP_ICON_SIZES="
 NPM_EXEC=""
 FRONTEND_DIR="$(pwd)/frontend"
 DIST_DIR="$(pwd)/dist"
-PKG_NAME="$APP_NAME.app"
-PKG_DIR="$DIST_DIR/$PKG_NAME"
-CONTENT_DIR="$PKG_DIR/Contents"
-RESOURCES_DIR="$CONTENT_DIR/Resources"
-EXEC_DIR="$CONTENT_DIR/MacOS"
 VERSION=$(cat version.txt)
 
 template=$(cat << EOF
@@ -36,6 +31,14 @@ template=$(cat << EOF
 	<string>AppIcon.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>$BUNDLE_NAME</string>
+	<key>CFBundleName</key>
+	<string>$APP_NAME</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$VERSION</string>
+	<key>CFBundleVersion</key>
+	<string>$VERSION</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>LSUIElement</key>
@@ -70,42 +73,47 @@ fi
 # 清空文件夹
 rm -rf ./dist/*
 
-# 创建文件目录
-if [ ! -d "$CONTENT_DIR" ]; then
-    mkdir -p "$CONTENT_DIR"
-fi
-if [ ! -d "$RESOURCES_DIR" ]; then
-    mkdir -p "$RESOURCES_DIR"
-fi
-if [ ! -d "$EXEC_DIR" ]; then
-    mkdir -p "$EXEC_DIR"
-fi
-
-# 创建 plist
-echo "$template" > "$CONTENT_DIR/Info.plist"
-
-# 生成图标文件
-ICONSET="$RESOURCES_DIR/AppIcon.iconset"
-mkdir -p "$ICONSET"
-for PARAMS in $APP_ICON_SIZES; do
-    SIZE=$(echo "$PARAMS" | cut -d, -f1)
-    LABEL=$(echo "$PARAMS" | cut -d, -f2)
-    svg2png -w "$SIZE" -h "$SIZE" buildAssets/AppIcon.svg "$ICONSET/icon_$LABEL.png"
-done
-iconutil -c icns "$ICONSET"
-rm -rf "$ICONSET"
-# 构建执行文件
-CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o "$DIST_DIR/${EXEC_NAME}_amd64"
-CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o "$DIST_DIR/${EXEC_NAME}_arm64"
-# 合并构建 universal 应用
-lipo -create -output "$EXEC_DIR/$EXEC_NAME" "$DIST_DIR/${EXEC_NAME}_amd64" "$DIST_DIR/${EXEC_NAME}_arm64"
-rm -rf "$DIST_DIR/${EXEC_NAME}_amd64"
-rm -rf "$DIST_DIR/${EXEC_NAME}_arm64"
 # 构建资源文件
 cd "$FRONTEND_DIR"
 $NPM_EXEC install
 $NPM_EXEC run build
 cd ..
-cp -rf "$FRONTEND_DIR/dist" "$RESOURCES_DIR/static"
-cd "$DIST_DIR"
-7z a "daily-wallpaper-mac-universal-v${VERSION}.7z" "$PKG_NAME"
+
+build_arch_app() {
+    ARCH="$1"
+    ARCH_DIR="$DIST_DIR/$ARCH"
+    PKG_NAME="$APP_NAME.app"
+    PKG_DIR="$ARCH_DIR/$PKG_NAME"
+    CONTENT_DIR="$PKG_DIR/Contents"
+    RESOURCES_DIR="$CONTENT_DIR/Resources"
+    EXEC_DIR="$CONTENT_DIR/MacOS"
+
+    mkdir -p "$RESOURCES_DIR" "$EXEC_DIR"
+
+    # 创建 plist
+    echo "$template" > "$CONTENT_DIR/Info.plist"
+
+    # 生成图标文件
+    ICONSET="$RESOURCES_DIR/AppIcon.iconset"
+    mkdir -p "$ICONSET"
+    for PARAMS in $APP_ICON_SIZES; do
+        SIZE=$(echo "$PARAMS" | cut -d, -f1)
+        LABEL=$(echo "$PARAMS" | cut -d, -f2)
+        svg2png -w "$SIZE" -h "$SIZE" buildAssets/AppIcon.svg "$ICONSET/icon_$LABEL.png"
+    done
+    iconutil -c icns "$ICONSET"
+    rm -rf "$ICONSET"
+
+    # 构建指定架构应用，不再通过 lipo 合并成 universal binary
+    CGO_ENABLED=1 GOOS=darwin GOARCH="$ARCH" go build -o "$EXEC_DIR/$EXEC_NAME"
+    cp -rf "$FRONTEND_DIR/dist" "$RESOURCES_DIR/static"
+
+    # SMAppService (macOS 13+ 登录项) 会校验代码签名；对每个架构包分别做本地 ad-hoc 签名。
+    codesign --force --sign - "$EXEC_DIR/$EXEC_NAME"
+    codesign --force --sign - "$PKG_DIR"
+
+    (cd "$ARCH_DIR" && 7z a "$DIST_DIR/daily-wallpaper-mac-$ARCH-v${VERSION}.7z" "$PKG_NAME")
+}
+
+build_arch_app amd64
+build_arch_app arm64
