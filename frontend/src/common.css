@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  html {
+    font-size: 62.5%;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    background: #f0f9ff;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body,
+  div,
+  span,
+  a {
+    padding: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
+  #app {
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(37, 99, 235, 0.55);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background-color: transparent;
+  }
+}
+
+@layer components {
+  .fluent-card {
+    @apply rounded-fluent border border-white/85 bg-white/78 shadow-subtle backdrop-blur-md;
+  }
+
+  .fluent-field {
+    @apply w-full rounded-2xl border border-sky-200/95 bg-white/90 px-4 py-3 text-[1.4rem] text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50/80 disabled:text-slate-400;
+  }
+
+  .fluent-button {
+    @apply inline-flex items-center justify-center rounded-2xl bg-accent-600 px-5 py-3 text-[1.4rem] font-semibold text-white shadow-sm transition hover:bg-accent-700 focus:outline-none focus:ring-4 focus:ring-accent-100 active:scale-[0.99];
+  }
+
+  .fluent-label {
+    @apply text-[1.3rem] font-semibold text-slate-700;
+  }
+}

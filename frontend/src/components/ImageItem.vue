@@ -1,33 +1,27 @@
 <template>
-  <div class="ImageItem">
-    <img :src="imageSrc" alt="">
-    <div class="ImageItem-mask" />
-    <div class="ImageItem-toolbar">
-      <div class="ImageItem-toolbar-desc">
+  <div class="group relative overflow-hidden rounded-fluent bg-slate-200 shadow-subtle">
+    <img class="block aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-[1.03]" :src="imageSrc" alt="">
+    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/10 to-transparent opacity-70 transition group-hover:opacity-100" />
+    <div class="absolute inset-x-0 bottom-0 flex translate-y-3 items-end gap-4 p-4 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:p-5">
+      <div class="min-w-0 flex-1 text-[1.3rem] leading-6 text-white drop-shadow">
         {{ value.copyright }}
       </div>
-      <NButton text @click="handleSetWallpaper">
-        <template #icon>
-          <NIcon size="20">
-            <IconWallpaper />
-          </NIcon>
-        </template>
+      <button class="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white/90 px-4 py-2.5 text-[1.3rem] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-4 focus:ring-white/40" @click="handleSetWallpaper">
+        <IconWallpaper class="h-5 w-5" />
         设为壁纸
-      </NButton>
+      </button>
     </div>
   </div>
 </template>
 
 <script>
-import IconDownload from '@/assets/icon-download.svg'
 import IconWallpaper from '@/assets/icon-wallpaper.svg'
 import useApi from '@/composables/useApi'
 import GlobalData from '@/injections/GlobalData'
-import { NButton, NIcon, useMessage } from 'naive-ui'
 import { computed, defineComponent, inject, unref } from 'vue'
 
 export default defineComponent({
-  components: { NIcon, IconWallpaper, NButton, IconDownload },
+  components: { IconWallpaper },
   props: {
     value: {
       type: Object,
@@ -35,8 +29,7 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const { settings, refreshSettings } = inject(GlobalData)
-    const message = useMessage()
+    const { settings, refreshSettings, message } = inject(GlobalData)
     const { updateSettings } = useApi()
 
     const imageSrc = computed(() => {
@@ -68,64 +61,3 @@ export default defineComponent({
   },
 })
 </script>
-
-<style lang="less">
-.ImageItem {
-  position: relative;
-  overflow: hidden;
-
-  &:hover {
-    .ImageItem {
-      &-mask {
-        background: rgba(0, 0, 0, 0.3);
-      }
-
-      &-toolbar {
-        transform: translateY(0);
-      }
-    }
-  }
-
-  &-img {
-    display: block;
-    width: 100%;
-  }
-
-  img {
-    width: 100%;
-    display: block;
-  }
-
-  &-mask {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0s;
-  }
-
-  &-toolbar {
-    transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0s;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    padding: 0 1rem;
-    box-sizing: border-box;
-    height: 4rem;
-    background: rgba(255, 255, 255, 0.7);
-    gap: 1rem;
-
-    &-desc {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-}
-</style>

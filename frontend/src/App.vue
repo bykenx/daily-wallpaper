@@ -1,27 +1,17 @@
 <template>
-  <NConfigProvider :locale="zhCN">
-    <NMessageProvider>
-      <AppWrap>
-        <RouterView />
-      </AppWrap>
-    </NMessageProvider>
-  </NConfigProvider>
+  <AppWrap>
+    <RouterView />
+  </AppWrap>
 </template>
 
 <script>
-import './common.less'
+import './common.css'
 import { defineComponent } from 'vue'
 import AppWrap from './components/AppWrap.vue'
 import { RouterView } from 'vue-router'
-import { NConfigProvider, NMessageProvider, zhCN } from 'naive-ui'
 
 export default defineComponent({
-  components: { AppWrap, RouterView, NConfigProvider, NMessageProvider },
-  setup() {
-    return {
-      zhCN,
-    }
-  },
+  components: { AppWrap, RouterView },
 })
 </script>
 

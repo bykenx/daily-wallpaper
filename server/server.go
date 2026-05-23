@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -127,6 +128,17 @@ func serveRoot(urlPrefix, root string) gin.HandlerFunc {
 	}
 }
 
+func serveSpaFallback(root string) gin.HandlerFunc {
+	indexFile := filepath.Join(root, "index.html")
+	return func(c *gin.Context) {
+		if strings.HasPrefix(c.Request.URL.Path, "/api/") {
+			c.String(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+			return
+		}
+		c.File(indexFile)
+	}
+}
+
 func StartServer() {
 	router := gin.Default()
 	router.Use(serveRoot("/", utils.GetStaticPath()))
@@ -139,6 +151,7 @@ func StartServer() {
 		router.GET("api/image/get", handleGetImage)
 		router.GET("api/image/list", handleGetImageList)
 	}
+	router.NoRoute(serveSpaFallback(utils.GetStaticPath()))
 	server := &http.Server{
 		Addr:    ":9001",
 		Handler: router,

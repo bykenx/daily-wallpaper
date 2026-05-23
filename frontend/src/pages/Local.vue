@@ -1,19 +1,31 @@
 <template>
-  <div class="Local">
-    <div class="Local-list">
-      <template v-for="item, index in data.items" :key="index">
-        <ImageItem class="Local-list-item" :value="{ url: item }" />
-      </template>
+  <section class="flex flex-1 flex-col gap-6">
+    <header class="fluent-card sticky top-5 z-20 px-5 py-5 sm:px-7">
+      <p class="text-[1.3rem] font-semibold uppercase tracking-[0.2em] text-accent-600">Local</p>
+      <h1 class="mt-2 text-[3rem] font-bold tracking-tight text-slate-950 sm:text-[4rem]">本地图片</h1>
+      <p class="mt-2 max-w-3xl text-[1.45rem] leading-7 text-slate-600">浏览本地可用图片，并快速设置为桌面壁纸。</p>
+    </header>
+
+    <div class="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+      <ImageItem
+        v-for="(item, index) in data.items"
+        :key="index"
+        :value="{ url: item }"
+      />
     </div>
-    <div class="Local-gasket" />
-  </div>
+
+    <div v-if="data.items.length === 0" class="fluent-card flex min-h-[24rem] items-center justify-center text-[1.5rem] text-slate-500">
+      暂无本地图片
+    </div>
+
+    <div class="h-8 shrink-0 Local-gasket" />
+  </section>
 </template>
 
 <script>
 
 // @ts-check
-import { defineComponent, inject, onMounted, onUnmounted, reactive, ref, unref, watch } from 'vue'
-import { NH2, useMessage } from 'naive-ui'
+import { defineComponent, inject, onMounted, onUnmounted, reactive, watch } from 'vue'
 import ImageItem from '@/components/ImageItem.vue'
 import useApi from '@/composables/useApi'
 import useToggle from '@/composables/useToggle'
@@ -21,15 +33,13 @@ import GlobalData from '@/injections/GlobalData'
 
 export default defineComponent({
   components: {
-    NH2,
     ImageItem,
   },
   setup() {
     /** @type {IntersectionObserver} */
     let observer
 
-    const { setLoading } = inject(GlobalData)
-    const message = useMessage()
+    const { setLoading, message } = inject(GlobalData)
     const [loadMore, setLoadMore] = useToggle()
     const { getImageList } = useApi()
     const data = reactive({
@@ -61,7 +71,6 @@ export default defineComponent({
       fetchImages()
         .then(() => {
           observer = new IntersectionObserver((entries) => {
-            console.log('load')
             if (entries[0].isIntersecting && !data.end) {
               data.pagination.start += 1
               setLoadMore()
@@ -80,23 +89,3 @@ export default defineComponent({
   },
 })
 </script>
-
-<style lang="less" scoped>
-.Local {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow-y: auto;
-
-  &-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  &-gasket {
-    width: 100%;
-    flex: 0 0 1rem;
-  }
-}
-</style>

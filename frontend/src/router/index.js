@@ -1,15 +1,17 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/pages/Home.vue'
 import More from '@/pages/More.vue'
 import Local from '@/pages/Local.vue'
+import Settings from '@/pages/Settings.vue'
 
 
 export default createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes: [
-    { path: '/', redirect: '/home' },
-    { name: 'Home', path: '/home', component: Home },
+    { path: '/', redirect: '/today' },
+    { name: 'Home', path: '/today', component: Home },
     { name: 'More', path: '/more', component: More },
     { name: 'Local', path: '/local', component: Local },
+    { name: 'Settings', path: '/settings', component: Settings },
   ],
 })
