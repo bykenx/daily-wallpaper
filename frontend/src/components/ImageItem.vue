@@ -58,7 +58,7 @@ export default defineComponent({
           message.success('壁纸设置成功')
         })
         .catch(err => {
-          message.error(err)
+          message.error(err?.message || '设置壁纸失败')
         })
     }
     return {

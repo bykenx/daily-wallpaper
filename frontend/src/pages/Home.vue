@@ -66,7 +66,7 @@ export default defineComponent({
           todayImage.value = data
         })
         .catch(err => {
-          message.error(err)
+          message.error(err?.message || '获取今日图片失败')
         })
         .finally(() => {
           setLoading(false)

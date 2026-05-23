@@ -109,7 +109,7 @@ export default defineComponent({
           message.success('切换图片源成功')
         })
         .catch(err => {
-          message.error(err)
+          message.error(err?.message || '获取设置失败')
         })
     }
     watch(refresh, () => {

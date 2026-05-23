@@ -54,7 +54,7 @@ func (u UnsplashSource) GetArchive(param sources.ArchiveParam) (sources.ArchiveR
 		Page:    param.Current,
 		PerPage: param.PageSize,
 	}
-	var items []sources.ImageItem
+	items := make([]sources.ImageItem, 0)
 	var result Response
 	err := sources.DispatchGetRequest(UrlPrefix, payload, &result)
 	if err == nil {

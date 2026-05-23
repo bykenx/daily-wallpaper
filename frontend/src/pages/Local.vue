@@ -38,24 +38,25 @@ export default defineComponent({
       end: false,
     })
 
-    const fetchImages = () => {
+    const fetchImages = async () => {
       setLoading(true)
-      return getImageList(data.pagination)
-        .then(items => {
+      try {
+        try {
+          const items = await getImageList(data.pagination)
           data.items.push(...items)
           data.end = items.length < data.pagination.limit
-        })
-        .catch(err => {
-          message.error(err)
-        })
-        .finally(() => {
-          setLoading(false)
-        })
+        } catch (err) {
+          message.error(err?.message || '获取图片列表失败')
+        }
+      } finally {
+        setLoading(false)
+      }
     }
 
     watch(loadMore, () => {
       fetchImages()
     })
+
     onMounted(() => {
       fetchImages()
         .then(() => {

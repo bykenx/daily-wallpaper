@@ -47,7 +47,7 @@ export default defineComponent({
           data.items.push(...items)
         })
         .catch(err => {
-          message.error(err)
+          message.error(err?.message || '获取更多图片失败')
         })
         .finally(() => {
           setLoading(false)

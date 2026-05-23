@@ -48,7 +48,7 @@ func (s BingSource) GetArchive(param sources.ArchiveParam) (sources.ArchiveRespo
 		UHDWidth:  UHDImageWidth,
 		UHDHeight: UHDImageHeight,
 	}
-	var items []sources.ImageItem
+	items := make([]sources.ImageItem, 0)
 	var result Response
 	err := sources.DispatchGetRequest(UrlPrefix, payload, &result)
 	if err == nil {
