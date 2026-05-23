@@ -17,16 +17,8 @@
 
 ## 构建
 
-### 1.Windows
-
-```powershell
-.\build-windows.ps1
-```
-
-### 2.Mac
-
 ```sh
-./build-mac.sh
+python3 scripts/build.py
 ```
 
 若你曾使用旧版本开启「开机自启」，升级后首次开启自启时会自动清理旧的会话登录项；若仍出现重复启动，可在「系统设置 → 一般 → 登录打开的项目」中移除多余的旧条目。
