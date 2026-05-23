@@ -3,7 +3,6 @@ package settings
 import (
 	"daily-wallpaper/constant"
 	"daily-wallpaper/utils"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -87,7 +86,7 @@ func InitSettings() Settings {
 			QualityFirst:        &BooleanFalse,
 		}
 		configBytes, _ := yaml.Marshal(settings)
-		_ = ioutil.WriteFile(p, configBytes, constant.DefaultFileCreatePermission)
+		_ = os.WriteFile(p, configBytes, constant.DefaultFileCreatePermission)
 	}
 	settings = ReadSettings()
 	lastModifyTime = utils.GetLastModifyTime(p)
@@ -98,7 +97,7 @@ func ReadSettings() Settings {
 	p := filepath.Join(constant.AppHome, constant.ConfigFileName)
 	if lastModifyTime < utils.GetLastModifyTime(p) {
 		configFilePath := filepath.Join(constant.AppHome, constant.ConfigFileName)
-		configBytes, _ := ioutil.ReadFile(configFilePath)
+		configBytes, _ := os.ReadFile(configFilePath)
 		_ = yaml.Unmarshal(configBytes, &settings)
 	}
 	return settings
@@ -112,7 +111,7 @@ func WriteSettings(src Settings) {
 	}
 	configFilePath := filepath.Join(constant.AppHome, constant.ConfigFileName)
 	configBytes, _ := yaml.Marshal(dst)
-	_ = ioutil.WriteFile(configFilePath, configBytes, constant.DefaultFileCreatePermission)
+	_ = os.WriteFile(configFilePath, configBytes, constant.DefaultFileCreatePermission)
 }
 
 func RegisterModifyCallback(callback ModifyCallback) {

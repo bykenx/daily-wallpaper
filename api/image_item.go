@@ -1,14 +1,17 @@
 package api
 
 import (
+	"crypto/sha1"
 	"daily-wallpaper/constant"
 	"daily-wallpaper/db"
 	"daily-wallpaper/models"
 	"daily-wallpaper/sources"
 	"daily-wallpaper/utils"
+	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -54,15 +57,22 @@ func GetOrDownload(url string) (string, error) {
 	if category == "" {
 		return "", DownloadError{msg: "不支持保存的文件类型"}
 	}
-	fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), suffix)
+	fileName, shortHash := buildImageFileName(url, suffix)
 	categoryPath := filepath.Join(constant.AppHome, category)
 	utils.MkdirIfNotExists(categoryPath)
 	filePath := filepath.Join(categoryPath, fileName)
-	_ = ioutil.WriteFile(filePath, bytes, constant.DefaultFileCreatePermission)
+	_ = os.WriteFile(filePath, bytes, constant.DefaultFileCreatePermission)
 	newModel.Url = url
 	newModel.Dir = filePath
+	newModel.Sha1 = shortHash
 	db.DB().Save(&newModel)
 	return filePath, nil
+}
+
+func buildImageFileName(url, suffix string) (string, string) {
+	sum := sha1.Sum([]byte(url))
+	shortHash := hex.EncodeToString(sum[:])[:7]
+	return fmt.Sprintf("%s_%s%s", time.Now().Format("200601021504"), shortHash, suffix), shortHash
 }
 
 func GetImageListPagination(start, limit int) []string {
@@ -87,7 +97,7 @@ func downloadSource(url string) ([]byte, string, error) {
 	if res.StatusCode != 200 {
 		return nil, "", DownloadError{msg: "链接请求错误"}
 	}
-	bytes, err := ioutil.ReadAll(res.Body)
+	bytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, "", DownloadError{msg: err.Error()}
 	}

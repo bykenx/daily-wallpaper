@@ -38,7 +38,11 @@ func onReady() {
 			log.Printf("任务执行失败: %s\n", err)
 			return
 		}
-		settings2.WriteSettings(settings2.Settings{CurrentImage: &res.Url})
+		imageUrl := res.Url
+		if settings.QualityFirst != nil && *settings.QualityFirst && res.UrlHS != "" {
+			imageUrl = res.UrlHS
+		}
+		settings2.WriteSettings(settings2.Settings{CurrentImage: &imageUrl})
 	})
 
 	if *settings.AutoUpdate && *settings.TimeToUpdate != "" {

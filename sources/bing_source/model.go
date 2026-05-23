@@ -1,10 +1,14 @@
 package bing_source
 
 type RequestPayload struct {
-	Format string `url:"format"`
-	Index  int          `url:"idx"`
-	PageSize int          `url:"n"`
-	Timestamp int64        `url:"nc"`
+	Format    string `url:"format"`
+	Index     int    `url:"idx"`
+	PageSize  int    `url:"n"`
+	Timestamp int64  `url:"nc"`
+	Pid       string `url:"pid,omitempty"`
+	UHD       int    `url:"uhd,omitempty"`
+	UHDWidth  int    `url:"uhdwidth,omitempty"`
+	UHDHeight int    `url:"uhdheight,omitempty"`
 }
 
 type ImageItem struct {

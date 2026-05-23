@@ -7,7 +7,12 @@ import (
 )
 
 const (
-	UrlPrefix = "https://cn.bing.com/HPImageArchive.aspx?%s"
+	UrlPrefix         = "https://cn.bing.com/HPImageArchive.aspx?%s"
+	ImageUrlPrefix    = "https://cn.bing.com%s"
+	NormalImageWidth  = 1920
+	NormalImageHeight = 1080
+	UHDImageWidth     = 3840
+	UHDImageHeight    = 2160
 )
 
 type BingSource struct{}
@@ -18,6 +23,10 @@ func (s BingSource) GetToday() (sources.TodayResponse, error) {
 		Index:     0,
 		PageSize:  1,
 		Timestamp: time.Now().Unix(),
+		Pid:       "hp",
+		UHD:       1,
+		UHDWidth:  UHDImageWidth,
+		UHDHeight: UHDImageHeight,
 	}
 	var result Response
 	err := sources.DispatchGetRequest(UrlPrefix, payload, &result)
@@ -25,16 +34,7 @@ func (s BingSource) GetToday() (sources.TodayResponse, error) {
 		return sources.ImageItem{}, err
 	}
 	item := result.Images[0]
-	return sources.ImageItem{
-		Name:          item.Title,
-		Url:           fmt.Sprintf("https://cn.bing.com%s", item.Url),
-		Description:   "",
-		Copyright:     item.Copyright,
-		CopyrightLink: item.CopyrightLink,
-		SourceLink:    "",
-		Author:        "",
-		Location:      "",
-	}, nil
+	return buildImageItem(item), nil
 }
 
 func (s BingSource) GetArchive(param sources.ArchiveParam) (sources.ArchiveResponse, error) {
@@ -43,22 +43,17 @@ func (s BingSource) GetArchive(param sources.ArchiveParam) (sources.ArchiveRespo
 		Index:     1,
 		PageSize:  8,
 		Timestamp: time.Now().Unix(),
+		Pid:       "hp",
+		UHD:       1,
+		UHDWidth:  UHDImageWidth,
+		UHDHeight: UHDImageHeight,
 	}
 	var items []sources.ImageItem
 	var result Response
 	err := sources.DispatchGetRequest(UrlPrefix, payload, &result)
 	if err == nil {
 		for _, item := range result.Images {
-			items = append(items, sources.ImageItem{
-				Name:          item.Title,
-				Url:           fmt.Sprintf("https://cn.bing.com%s", item.Url),
-				Description:   "",
-				Copyright:     item.Copyright,
-				CopyrightLink: item.CopyrightLink,
-				SourceLink:    "",
-				Author:        "",
-				Location:      "",
-			})
+			items = append(items, buildImageItem(item))
 		}
 	}
 	return sources.ArchiveResponse{
@@ -67,4 +62,19 @@ func (s BingSource) GetArchive(param sources.ArchiveParam) (sources.ArchiveRespo
 		Current:  0,
 		PageSize: 8,
 	}, nil
+}
+
+func buildImageItem(item ImageItem) sources.ImageItem {
+	normalUrl := fmt.Sprintf("%s_%dx%d.jpg", item.UrlBase, NormalImageWidth, NormalImageHeight)
+	return sources.ImageItem{
+		Name:          item.Title,
+		Url:           fmt.Sprintf(ImageUrlPrefix, normalUrl),
+		UrlHS:         fmt.Sprintf(ImageUrlPrefix, item.Url),
+		Description:   "",
+		Copyright:     item.Copyright,
+		CopyrightLink: item.CopyrightLink,
+		SourceLink:    "",
+		Author:        "",
+		Location:      "",
+	}
 }

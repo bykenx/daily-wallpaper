@@ -3,11 +3,12 @@ package sources
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-querystring/query"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/google/go-querystring/query"
 )
 
 func DispatchGetRequest(url string, payload, result interface{}) error {
@@ -16,7 +17,7 @@ func DispatchGetRequest(url string, payload, result interface{}) error {
 	if err != nil {
 		return err
 	}
-	data, err := ioutil.ReadAll(res.Body)
+	data, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}

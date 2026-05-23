@@ -1,6 +1,6 @@
 <template>
   <div class="ImageItem">
-    <img :src="`/api/image/get?link=${encodeURIComponent(value.url)}`" alt="">
+    <img :src="imageSrc" alt="">
     <div class="ImageItem-mask" />
     <div class="ImageItem-toolbar">
       <div class="ImageItem-toolbar-desc">
@@ -24,7 +24,7 @@ import IconWallpaper from '@/assets/icon-wallpaper.svg'
 import useApi from '@/composables/useApi'
 import GlobalData from '@/injections/GlobalData'
 import { NButton, NIcon, useMessage } from 'naive-ui'
-import { defineComponent, inject, unref } from 'vue'
+import { computed, defineComponent, inject, unref } from 'vue'
 
 export default defineComponent({
   components: { NIcon, IconWallpaper, NButton, IconDownload },
@@ -39,11 +39,18 @@ export default defineComponent({
     const message = useMessage()
     const { updateSettings } = useApi()
 
+    const imageSrc = computed(() => {
+      const { url, urlHS } = props.value
+      const { qualityFirst } = unref(settings)
+      const link = qualityFirst && urlHS ? urlHS : url
+      return `/api/image/get?link=${encodeURIComponent(link)}`
+    })
     const handleSetWallpaper = () => {
       const { url, urlHS } = props.value
       const { qualityFirst } = unref(settings)
+      const currentImage = qualityFirst && urlHS ? urlHS : url
       const data = {
-        currentImage: qualityFirst && urlHS ? urlHS : url,
+        currentImage,
       }
       updateSettings(data)
         .then(data => {
@@ -55,6 +62,7 @@ export default defineComponent({
         })
     }
     return {
+      imageSrc,
       handleSetWallpaper,
     }
   },

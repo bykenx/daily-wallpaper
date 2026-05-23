@@ -25,9 +25,8 @@ func OpenDB() {
 
 	if db.Migrator().HasTable("download_histories") {
 		db.Migrator().RenameTable("download_histories", &models.ImageItem{})
-	} else {
-		err = db.AutoMigrate(&models.ImageItem{})
 	}
+	err = db.AutoMigrate(&models.ImageItem{})
 
 	{
 		// 迁移数据
