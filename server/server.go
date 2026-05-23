@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"daily-wallpaper/api"
-	settings2 "daily-wallpaper/settings"
+	st "daily-wallpaper/settings"
 	"daily-wallpaper/sources"
 	"daily-wallpaper/utils"
 	"log"
@@ -22,18 +22,18 @@ import (
 )
 
 func handleGetAllSettings(c *gin.Context) {
-	settings := settings2.ReadSettings()
+	settings := st.ReadSettings()
 	utils.GinJsonResult(c, settings)
 }
 
 func handleModifySettings(c *gin.Context) {
-	var settings settings2.Settings
+	var settings st.Settings
 	err := c.ShouldBind(&settings)
 	if err != nil {
 		utils.GinJsonError(c, err.Error())
 		return
 	}
-	settings2.WriteSettings(settings)
+	st.WriteSettings(settings)
 	utils.GinJsonResult(c, "数据修改成功")
 }
 
@@ -42,7 +42,7 @@ func handleGetSources(c *gin.Context) {
 }
 
 func handleTodayImage(c *gin.Context) {
-	name := settings2.ReadSettings().CurrentSource
+	name := st.ReadSettings().CurrentSource
 	if name == nil || *name == "" {
 		*name = "bing"
 	}
@@ -56,7 +56,7 @@ func handleTodayImage(c *gin.Context) {
 }
 
 func handleArchiveImages(c *gin.Context) {
-	name := settings2.ReadSettings().CurrentSource
+	name := st.ReadSettings().CurrentSource
 	if name == nil || *name == "" {
 		*name = "bing"
 	}

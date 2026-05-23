@@ -5,8 +5,8 @@ import (
 	"daily-wallpaper/db"
 	"daily-wallpaper/icon"
 	"daily-wallpaper/server"
-	settings2 "daily-wallpaper/settings"
-	task2 "daily-wallpaper/task"
+	st "daily-wallpaper/settings"
+	tk "daily-wallpaper/task"
 	"daily-wallpaper/utils"
 	"log"
 
@@ -26,49 +26,28 @@ func onReady() {
 	checkedChan := make(chan bool, 1)
 	checkedChan2 := make(chan bool, 1)
 
-	settings := settings2.InitSettings()
+	settings := st.InitSettings()
 	db.OpenDB()
 	server.StartServer()
 
-	task := task2.NewTask(func() {
-		settings := settings2.ReadSettings()
-		source := utils.GetSource(*settings.CurrentSource)
-		res, err := source.GetToday()
-		if err != nil {
-			log.Printf("任务执行失败: %s\n", err)
-			return
-		}
-		imageUrl := res.Url
-		if settings.QualityFirst != nil && *settings.QualityFirst && res.UrlHS != "" {
-			imageUrl = res.UrlHS
-		}
-		settings2.WriteSettings(settings2.Settings{CurrentImage: &imageUrl})
-	})
+	autoUpdater := tk.NewAutoUpdater()
+	task := tk.NewTask(autoUpdater.RunIfNeeded)
 
 	if *settings.AutoUpdate && *settings.TimeToUpdate != "" {
 		log.Printf("开启自动更新，更新时间设置为: %s\n", *settings.TimeToUpdate)
 		task.RunAt(*settings.TimeToUpdate).Start()
 	}
+	autoUpdater.StartMissedChecker()
 
-	settings2.RegisterModifyCallback(func(s settings2.Settings, changed settings2.FieldChanged) {
-		if changed&settings2.CurrentImageChanged != 0 {
-			savedPath, err := api.GetOrDownload(*s.CurrentImage)
-			if err != nil {
-				log.Printf("文件下载失败: %s\n", err)
-				return
-			}
-			err = api.SetWallpaper(savedPath)
-			if err != nil {
-				log.Printf("设置壁纸失败: %s\n", err)
-				return
-			}
-			log.Println("切换壁纸成功")
+	st.RegisterModifyCallback(func(s st.Settings, changed st.FieldChanged) {
+		if changed&st.CurrentImageChanged != 0 {
+			autoUpdater.ApplyCurrentImage(s)
 		}
-		if changed&settings2.TimeToUpdateChanged != 0 {
+		if changed&st.TimeToUpdateChanged != 0 {
 			log.Printf("更新时间设置为: %s", *s.TimeToUpdate)
-			task.RunAt(*s.TimeToUpdate)
+			task.RunAt(*s.TimeToUpdate).Restart()
 		}
-		if changed&settings2.AutoUpdateChanged != 0 {
+		if changed&st.AutoUpdateChanged != 0 {
 			if *s.AutoUpdate {
 				log.Println("开启自动更新")
 				checkedChan <- true
@@ -79,7 +58,7 @@ func onReady() {
 				task.Stop()
 			}
 		}
-		if changed&settings2.AutoRunAtSystemBootChanged != 0 {
+		if changed&st.AutoRunAtSystemBootChanged != 0 {
 			if *s.AutoRunAtSystemBoot {
 				log.Println("开启开机自启")
 				checkedChan2 <- true
@@ -106,12 +85,12 @@ func onReady() {
 				systray.Quit()
 			case <-everydayItem.ClickedCh:
 				checked := !everydayItem.Checked()
-				settings2.WriteSettings(settings2.Settings{AutoUpdate: &checked})
+				st.WriteSettings(st.Settings{AutoUpdate: &checked})
 			case <-moreSettingItem.ClickedCh:
 				utils.OpenUrl("http://127.0.0.1:9001")
 			case <-startAtLoginItem.ClickedCh:
 				checked := !startAtLoginItem.Checked()
-				settings2.WriteSettings(settings2.Settings{AutoRunAtSystemBoot: &checked})
+				st.WriteSettings(st.Settings{AutoRunAtSystemBoot: &checked})
 			case v := <-checkedChan:
 				if v {
 					everydayItem.Check()

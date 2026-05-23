@@ -29,6 +29,7 @@ type Settings struct {
 	TimeToUpdate        *string `json:"timeToUpdate" yaml:"time_to_update"`
 	AutoRunAtSystemBoot *bool   `json:"autoRunAtSystemBoot" yaml:"auto_run_at_system_boot"`
 	QualityFirst        *bool   `json:"qualityFirst" yaml:"quality_first"`
+	LastAutoUpdateDate  *string `json:"lastAutoUpdateDate" yaml:"last_auto_update_date"`
 }
 
 type FieldChanged int
@@ -40,6 +41,7 @@ const (
 	TimeToUpdateChanged
 	AutoRunAtSystemBootChanged
 	QualityFirstChanged
+	LastAutoUpdateDateChanged
 )
 
 func mergeSettings(dst *Settings, src Settings) (res FieldChanged) {
@@ -68,6 +70,10 @@ func mergeSettings(dst *Settings, src Settings) (res FieldChanged) {
 		dst.QualityFirst = src.QualityFirst
 		res += QualityFirstChanged
 	}
+	if src.LastAutoUpdateDate != nil && dst.LastAutoUpdateDate != src.LastAutoUpdateDate {
+		dst.LastAutoUpdateDate = src.LastAutoUpdateDate
+		res += LastAutoUpdateDateChanged
+	}
 	return
 }
 
@@ -84,6 +90,7 @@ func InitSettings() Settings {
 			TimeToUpdate:        &StringEmpty,
 			AutoRunAtSystemBoot: &BooleanFalse,
 			QualityFirst:        &BooleanFalse,
+			LastAutoUpdateDate:  &StringEmpty,
 		}
 		configBytes, _ := yaml.Marshal(settings)
 		_ = os.WriteFile(p, configBytes, constant.DefaultFileCreatePermission)
@@ -106,12 +113,14 @@ func ReadSettings() Settings {
 func WriteSettings(src Settings) {
 	dst := ReadSettings()
 	res := mergeSettings(&dst, src)
-	if res != 0 && modifyCallback != nil {
-		modifyCallback(dst, res)
-	}
 	configFilePath := filepath.Join(constant.AppHome, constant.ConfigFileName)
 	configBytes, _ := yaml.Marshal(dst)
 	_ = os.WriteFile(configFilePath, configBytes, constant.DefaultFileCreatePermission)
+	settings = dst
+	lastModifyTime = utils.GetLastModifyTime(configFilePath)
+	if res != 0 && modifyCallback != nil {
+		modifyCallback(dst, res)
+	}
 }
 
 func RegisterModifyCallback(callback ModifyCallback) {
