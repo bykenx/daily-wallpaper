@@ -21,6 +21,6 @@ func SetWallpaper(path string) error {
 		log.Printf("不支持的桌面环境: %s", desktop)
 		return nil
 	}
-	cmd = strings.Replace(cmd, "\\", "\\\\", -1)
+	cmd = strings.ReplaceAll(cmd, "\\", "\\\\")
 	return exec.Command("/bin/sh", "-c", cmd).Run()
 }
