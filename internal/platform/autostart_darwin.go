@@ -8,6 +8,7 @@ package platform
 #include <Cocoa/Cocoa.h>
 #include <CoreServices/CoreServices.h>
 #include <ServiceManagement/ServiceManagement.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 static NSString *const kLaunchAgentLabel = @"com.bykenx.daily-wallpaper";
@@ -178,15 +179,14 @@ BOOL setStartAtLogin(BOOL startAtLogin)
 	removeLaunchAgentFiles();
 	return YES;
 }
+
+static bool setStartAtLoginBool(bool startAtLogin)
+{
+	return setStartAtLogin(startAtLogin ? YES : NO) == YES;
+}
 */
 import "C"
 
 func SetStartAtLogin(startAtLogin bool) bool {
-	var startAtLoginVal C.BOOL
-	if startAtLogin {
-		startAtLoginVal = CTypeTrue
-	} else {
-		startAtLoginVal = CTypeFalse
-	}
-	return C.setStartAtLogin(C.BOOL(startAtLoginVal)) == CTypeTrue
+	return bool(C.setStartAtLoginBool(C.bool(startAtLogin)))
 }
