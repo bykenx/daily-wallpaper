@@ -1,10 +1,9 @@
-package wallpaper
+package utils
 
 import (
 	"daily-wallpaper/internal/platform"
 	st "daily-wallpaper/internal/settings"
 	"daily-wallpaper/internal/source/registry"
-	"daily-wallpaper/internal/util"
 	"fmt"
 	"log"
 	"strings"
@@ -69,7 +68,7 @@ func (u *AutoUpdater) ApplyCurrentImage(settings st.Settings) {
 	var savedPath string
 	err := retry("下载并设置壁纸", autoUpdateRetryCount, autoUpdateRetryInterval, func() error {
 		var err error
-		savedPath, err = util.GetOrDownload(*settings.CurrentImage)
+		savedPath, err = GetOrDownload(*settings.CurrentImage)
 		if err != nil {
 			return fmt.Errorf("文件下载失败: %w", err)
 		}

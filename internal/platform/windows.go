@@ -11,15 +11,78 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"syscall"
+	"time"
 	"unicode/utf16"
 	"unicode/utf8"
+	"unsafe"
 
+	"github.com/getlantern/systray"
 	"golang.org/x/sys/windows"
 )
 
 // Matches bundle id style from scripts/build.py; must stay stable across versions.
 const scheduledTaskName = "DailyWallpaper_com.bykenx.daily-wallpaper"
+
+var (
+	user32DLL           = windows.NewLazyDLL("user32.dll")
+	procFindWindowW     = user32DLL.NewProc("FindWindowW")
+	procSystemParamInfo = user32DLL.NewProc("SystemParametersInfoW")
+)
+
+func SetStartAtLogin(startAtLogin bool) bool {
+	if startAtLogin {
+		exe, ok := resolvedExecutable()
+		if !ok {
+			log.Printf("[autostart] enable failed: could not resolve executable")
+			return false
+		}
+		if err := createScheduledTask(exe); err != nil {
+			log.Printf("[autostart] enable failed")
+			return false
+		}
+		log.Printf("[autostart] enable succeeded")
+		return true
+	}
+	if !scheduledTaskExists() {
+		return true
+	}
+	if err := deleteScheduledTask(); err != nil {
+		log.Printf("[autostart] disable failed")
+		return false
+	}
+	log.Printf("[autostart] disable succeeded")
+	return true
+}
+
+func SetWallpaper(path string) error {
+	imagePath, _ := windows.UTF16PtrFromString(path)
+	_, _, err := procSystemParamInfo.Call(20, 0, uintptr(unsafe.Pointer(imagePath)), 0x001a)
+	if err != nil && err != windows.ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+
+func SetTrayIcon(iconData []byte) {
+	systray.SetIcon(iconData)
+}
+
+func RunTray(onReady, onExit func()) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	prepareTrayEnvironment()
+	systray.Run(onReady, onExit)
+}
+
+func OpenUrl(url string) {
+	verbPtr, _ := syscall.UTF16PtrFromString("open")
+	filePtr, _ := syscall.UTF16PtrFromString("cmd")
+	argsPtr, _ := syscall.UTF16PtrFromString(fmt.Sprintf("/c start %s", url))
+	windows.ShellExecute(0, verbPtr, filePtr, argsPtr, nil, 0)
+}
 
 func schtasksExe() string {
 	root := os.Getenv("SystemRoot")
@@ -93,6 +156,7 @@ func xmlEscape(s string) string {
 func scheduledTaskXML(exe, userID string) string {
 	exe = xmlEscape(exe)
 	userID = xmlEscape(userID)
+	workDir := xmlEscape(filepath.Dir(exe))
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
@@ -101,6 +165,7 @@ func scheduledTaskXML(exe, userID string) string {
   <Triggers>
     <LogonTrigger>
       <Enabled>true</Enabled>
+      <Delay>PT10S</Delay>
       <UserId>%s</UserId>
     </LogonTrigger>
   </Triggers>
@@ -127,9 +192,10 @@ func scheduledTaskXML(exe, userID string) string {
   <Actions Context="Author">
     <Exec>
       <Command>%s</Command>
+      <WorkingDirectory>%s</WorkingDirectory>
     </Exec>
   </Actions>
-</Task>`, userID, userID, exe)
+</Task>`, userID, userID, exe, workDir)
 }
 
 func writeUTF16XML(path, content string) error {
@@ -145,6 +211,10 @@ func writeUTF16XML(path, content string) error {
 
 func runSchtasks(quiet bool, args ...string) error {
 	cmd := exec.Command(schtasksExe(), args...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow:    true,
+		CreationFlags: windows.CREATE_NO_WINDOW,
+	}
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -193,27 +263,35 @@ func deleteScheduledTask() error {
 	return runSchtasks(false, "/Delete", "/TN", scheduledTaskName, "/F")
 }
 
-func SetStartAtLogin(startAtLogin bool) bool {
-	if startAtLogin {
-		exe, ok := resolvedExecutable()
-		if !ok {
-			log.Printf("[autostart] enable failed: could not resolve executable")
-			return false
+func shellTrayReady() bool {
+	for _, className := range []string{"Shell_TrayWnd", "Shell_SecondaryTrayWnd"} {
+		class, err := windows.UTF16PtrFromString(className)
+		if err != nil {
+			continue
 		}
-		if err := createScheduledTask(exe); err != nil {
-			log.Printf("[autostart] enable failed")
-			return false
+		ret, _, _ := procFindWindowW.Call(uintptr(unsafe.Pointer(class)), 0)
+		if ret != 0 {
+			return true
 		}
-		log.Printf("[autostart] enable succeeded")
-		return true
 	}
-	if !scheduledTaskExists() {
-		return true
+	return false
+}
+
+func prepareTrayEnvironment() {
+	if shellTrayReady() {
+		time.Sleep(500 * time.Millisecond)
+		return
 	}
-	if err := deleteScheduledTask(); err != nil {
-		log.Printf("[autostart] disable failed")
-		return false
+
+	log.Println("[tray] waiting for Windows shell to initialize...")
+	deadline := time.Now().Add(2 * time.Minute)
+	for time.Now().Before(deadline) {
+		if shellTrayReady() {
+			time.Sleep(3 * time.Second)
+			log.Println("[tray] Windows shell is ready")
+			return
+		}
+		time.Sleep(500 * time.Millisecond)
 	}
-	log.Printf("[autostart] disable succeeded")
-	return true
+	log.Println("[tray] Windows shell wait timed out, continuing anyway")
 }

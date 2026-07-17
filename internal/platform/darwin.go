@@ -1,14 +1,26 @@
-//go:build darwin
+//go:build darwin && cgo
 
 package platform
 
+import (
+	"errors"
+	"os/exec"
+	"unsafe"
+
+	"github.com/getlantern/systray"
+)
+
 /*
 #cgo CFLAGS: -x objective-c
-#cgo LDFLAGS: -framework Cocoa -framework ServiceManagement -framework CoreServices
+#cgo LDFLAGS: -framework Cocoa -framework ServiceManagement -framework CoreServices -framework AppKit -framework Foundation -framework ApplicationServices
 #include <Cocoa/Cocoa.h>
 #include <CoreServices/CoreServices.h>
 #include <ServiceManagement/ServiceManagement.h>
+#import <AppKit/AppKit.h>
+#import <ApplicationServices/ApplicationServices.h>
+#import <Foundation/Foundation.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 static NSString *const kLaunchAgentLabel = @"com.bykenx.daily-wallpaper";
@@ -18,7 +30,6 @@ static NSString *launchAgentPlistPath(void)
 	return [NSString stringWithFormat:@"%@/Library/LaunchAgents/%@.plist", NSHomeDirectory(), kLaunchAgentLabel];
 }
 
-// Removes legacy session login items created by older versions (LSSharedFileList), only used on macOS 13+ before SMAppService.
 static void removeLegacySessionLoginItems(void)
 {
 #pragma clang diagnostic push
@@ -164,7 +175,6 @@ BOOL setStartAtLogin(BOOL startAtLogin)
 			removeLaunchAgentFiles();
 			if (registerLoginItemWithSMAppService())
 				return YES;
-			// Unsigned or incomplete .app bundles cannot use SMAppService; fall back to LaunchAgent.
 			return installLaunchAgent();
 		}
 		BOOL ok = [service unregisterAndReturnError:&err];
@@ -184,9 +194,68 @@ static bool setStartAtLoginBool(bool startAtLogin)
 {
 	return setStartAtLogin(startAtLogin ? YES : NO) == YES;
 }
+
+static BOOL screenIsLocked(void) {
+	CFDictionaryRef session = CGSessionCopyCurrentDictionary();
+	if (session == NULL) {
+		return NO;
+	}
+	CFBooleanRef locked = (CFBooleanRef)CFDictionaryGetValue(session, CFSTR("CGSSessionScreenIsLocked"));
+	BOOL isLocked = (locked == kCFBooleanTrue);
+	CFRelease(session);
+	return isLocked;
+}
+
+char* setWallpaperForAllScreens(const char* path) {
+	@autoreleasepool {
+		if (screenIsLocked()) {
+			return strdup("屏幕已锁定，稍后重试");
+		}
+
+		NSString *pathString = [NSString stringWithUTF8String:path];
+		NSURL *imageURL = [NSURL fileURLWithPath:pathString];
+		NSArray<NSScreen *> *screens = [NSScreen screens];
+		NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
+
+		for (NSScreen *screen in screens) {
+			NSError *error = nil;
+			BOOL ok = [workspace setDesktopImageURL:imageURL forScreen:screen options:@{} error:&error];
+			if (!ok) {
+				NSString *message = error ? [error localizedDescription] : @"设置壁纸失败";
+				return strdup([message UTF8String]);
+			}
+		}
+
+		return NULL;
+	}
+}
 */
 import "C"
 
 func SetStartAtLogin(startAtLogin bool) bool {
 	return bool(C.setStartAtLoginBool(C.bool(startAtLogin)))
+}
+
+func SetWallpaper(path string) error {
+	cPath := C.CString(path)
+	defer C.free(unsafe.Pointer(cPath))
+
+	errMsg := C.setWallpaperForAllScreens(cPath)
+	if errMsg != nil {
+		defer C.free(unsafe.Pointer(errMsg))
+		return errors.New(C.GoString(errMsg))
+	}
+	return nil
+}
+
+func SetTrayIcon(iconData []byte) {
+	systray.SetTemplateIcon(iconData, iconData)
+}
+
+func RunTray(onReady, onExit func()) {
+	systray.Run(onReady, onExit)
+}
+
+func OpenUrl(url string) {
+	_ = exec.Command("open", url).Start()
 }

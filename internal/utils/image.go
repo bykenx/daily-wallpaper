@@ -1,10 +1,30 @@
-package util
+package utils
 
 import (
+	"crypto/sha1"
 	"daily-wallpaper/internal/config"
 	"daily-wallpaper/internal/db"
+	"daily-wallpaper/internal/source"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
+)
+
+var (
+	knownMediaSuffix = map[string]string{
+		"image/png":  ".png",
+		"image/jpg":  ".jpg",
+		"image/jpeg": ".jpg",
+	}
+	knownSuffixCategory = map[string]string{
+		".png": "images",
+		".jpg": "images",
+	}
 )
 
 func GetOrDownload(url string) (string, error) {
@@ -20,11 +40,11 @@ func GetOrDownload(url string) (string, error) {
 
 	bytes, suffix, err := downloadSource(url)
 	if err != nil {
-		return "", DownloadError{msg: err.Error()}
+		return "", err
 	}
 	category := knownSuffixCategory[suffix]
 	if category == "" {
-		return "", DownloadError{msg: "不支持保存的文件类型"}
+		return "", errors.New("不支持保存的文件类型")
 	}
 	fileName, shortHash := buildImageFileName(url, suffix)
 	categoryPath := filepath.Join(config.AppHome, category)
@@ -51,4 +71,31 @@ func GetImageListPagination(start, limit int) []string {
 		resultList = append(resultList, item.Url)
 	}
 	return resultList
+}
+
+func buildImageFileName(url, suffix string) (string, string) {
+	sum := sha1.Sum([]byte(url))
+	shortHash := hex.EncodeToString(sum[:])[:7]
+	return fmt.Sprintf("%s_%s%s", time.Now().Format("200601021504"), shortHash, suffix), shortHash
+}
+
+func downloadSource(url string) ([]byte, string, error) {
+	res, err := http.Get(source.GetSafeUrl(url))
+	if err != nil {
+		return nil, "", err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return nil, "", errors.New("链接请求错误")
+	}
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, "", err
+	}
+	mediaType := res.Header.Get("content-type")
+	suffix := knownMediaSuffix[mediaType]
+	if suffix == "" {
+		return nil, "", errors.New("不支持的资源类型")
+	}
+	return bytes, suffix, nil
 }

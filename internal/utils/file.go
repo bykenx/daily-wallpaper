@@ -1,4 +1,4 @@
-package util
+package utils
 
 import (
 	"daily-wallpaper/internal/config"
@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 )
-
-var platform = runtime.GOOS
 
 func IsDir(path string) bool {
 	stat, err := os.Stat(path)
@@ -56,7 +54,7 @@ func GetCwd() string {
 
 func GetStaticPath() string {
 	cwd := GetCwd()
-	switch platform {
+	switch runtime.GOOS {
 	case "windows":
 		return filepath.Join(cwd, "static")
 	case "darwin":

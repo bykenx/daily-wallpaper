@@ -7,8 +7,7 @@ import (
 	"daily-wallpaper/internal/platform"
 	"daily-wallpaper/internal/scheduler"
 	st "daily-wallpaper/internal/settings"
-	"daily-wallpaper/internal/util"
-	"daily-wallpaper/internal/wallpaper"
+	"daily-wallpaper/internal/utils"
 	"log"
 
 	"github.com/getlantern/systray"
@@ -27,7 +26,7 @@ func OnReady() {
 	db.OpenDB()
 	httpserver.StartServer()
 
-	autoUpdater := wallpaper.NewAutoUpdater()
+	autoUpdater := utils.NewAutoUpdater()
 	task := scheduler.NewTask(autoUpdater.RunIfNeeded)
 
 	if *settings.AutoUpdate && *settings.TimeToUpdate != "" {
@@ -84,7 +83,7 @@ func OnReady() {
 				checked := !everydayItem.Checked()
 				st.WriteSettings(st.Settings{AutoUpdate: &checked})
 			case <-moreSettingItem.ClickedCh:
-				util.OpenUrl("http://127.0.0.1:9001")
+				platform.OpenUrl("http://127.0.0.1:9001")
 			case <-startAtLoginItem.ClickedCh:
 				checked := !startAtLoginItem.Checked()
 				st.WriteSettings(st.Settings{AutoRunAtSystemBoot: &checked})

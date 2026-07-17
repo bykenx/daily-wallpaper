@@ -2,10 +2,9 @@ package main
 
 import (
 	"daily-wallpaper/internal/app"
-
-	"github.com/getlantern/systray"
+	"daily-wallpaper/internal/platform"
 )
 
 func main() {
-	systray.Run(app.OnReady, app.OnExit)
+	platform.RunTray(app.OnReady, app.OnExit)
 }

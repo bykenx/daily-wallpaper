@@ -2,7 +2,6 @@ package settings
 
 import (
 	"daily-wallpaper/internal/config"
-	"daily-wallpaper/internal/util"
 	"os"
 	"path/filepath"
 
@@ -78,11 +77,11 @@ func mergeSettings(dst *Settings, src Settings) (res FieldChanged) {
 }
 
 func InitSettings() Settings {
-	if !util.IsDir(config.AppHome) {
+	if !isDir(config.AppHome) {
 		_ = os.Mkdir(config.AppHome, config.DefaultDirectoryCreatePermission)
 	}
 	p := filepath.Join(config.AppHome, config.ConfigFileName)
-	if !util.IsFile(p) {
+	if !isFile(p) {
 		settings := Settings{
 			CurrentSource:       &StringEmpty,
 			CurrentImage:        &StringEmpty,
@@ -96,13 +95,13 @@ func InitSettings() Settings {
 		_ = os.WriteFile(p, configBytes, config.DefaultFileCreatePermission)
 	}
 	settings = ReadSettings()
-	lastModifyTime = util.GetLastModifyTime(p)
+	lastModifyTime = fileModTime(p)
 	return settings
 }
 
 func ReadSettings() Settings {
 	p := filepath.Join(config.AppHome, config.ConfigFileName)
-	if lastModifyTime < util.GetLastModifyTime(p) {
+	if lastModifyTime < fileModTime(p) {
 		configFilePath := filepath.Join(config.AppHome, config.ConfigFileName)
 		configBytes, _ := os.ReadFile(configFilePath)
 		_ = yaml.Unmarshal(configBytes, &settings)
@@ -117,10 +116,28 @@ func WriteSettings(src Settings) {
 	configBytes, _ := yaml.Marshal(dst)
 	_ = os.WriteFile(configFilePath, configBytes, config.DefaultFileCreatePermission)
 	settings = dst
-	lastModifyTime = util.GetLastModifyTime(configFilePath)
+	lastModifyTime = fileModTime(configFilePath)
 	if res != 0 && modifyCallback != nil {
 		modifyCallback(dst, res)
 	}
+}
+
+func isDir(path string) bool {
+	stat, err := os.Stat(path)
+	return err == nil && stat.IsDir()
+}
+
+func isFile(path string) bool {
+	stat, err := os.Stat(path)
+	return err == nil && !stat.IsDir()
+}
+
+func fileModTime(path string) int64 {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return 0
+	}
+	return stat.ModTime().Unix()
 }
 
 func RegisterModifyCallback(callback ModifyCallback) {

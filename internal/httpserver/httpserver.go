@@ -5,7 +5,7 @@ import (
 	st "daily-wallpaper/internal/settings"
 	"daily-wallpaper/internal/source"
 	"daily-wallpaper/internal/source/registry"
-	"daily-wallpaper/internal/util"
+	"daily-wallpaper/internal/utils"
 	"log"
 	"net/http"
 	"os"
@@ -88,7 +88,7 @@ func handleArchiveImages(c *gin.Context) {
 
 func handleGetImage(c *gin.Context) {
 	link := c.Query("link")
-	if dir, err := util.GetOrDownload(link); err == nil {
+	if dir, err := utils.GetOrDownload(link); err == nil {
 		if content, err := os.ReadFile(dir); err == nil {
 			c.Render(http.StatusOK, render.Data{
 				ContentType: http.DetectContentType(content),
@@ -109,7 +109,7 @@ func handleGetImageList(c *gin.Context) {
 	if num, err := strconv.Atoi(c.Query("limit")); err == nil {
 		limit = num
 	}
-	jsonResult(c, util.GetImageListPagination(start, limit))
+	jsonResult(c, utils.GetImageListPagination(start, limit))
 }
 
 func serveRoot(urlPrefix, root string) gin.HandlerFunc {
@@ -156,7 +156,7 @@ func serveSpaFallback(root string) gin.HandlerFunc {
 
 func StartServer() {
 	router := gin.Default()
-	router.Use(serveRoot("/", util.GetStaticPath()))
+	router.Use(serveRoot("/", utils.GetStaticPath()))
 	{
 		router.GET("api/settings", handleGetAllSettings)
 		router.PUT("api/settings", handleModifySettings)
@@ -166,7 +166,7 @@ func StartServer() {
 		router.GET("api/image/get", handleGetImage)
 		router.GET("api/image/list", handleGetImageList)
 	}
-	router.NoRoute(serveSpaFallback(util.GetStaticPath()))
+	router.NoRoute(serveSpaFallback(utils.GetStaticPath()))
 	server := &http.Server{
 		Addr:    ":9001",
 		Handler: router,

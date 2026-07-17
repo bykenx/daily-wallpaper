@@ -1,0 +1,31 @@
+# Air 热重载配置: https://github.com/air-verse/air
+# 用法: air
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/daily_wallpaper.exe ./cmd/daily-wallpaper"
+bin = "tmp/daily_wallpaper.exe"
+include_ext = ["go"]
+exclude_dir = ["assets", "tmp", "vendor", "frontend", "dist", "scripts"]
+exclude_regex = ["_test\\.go"]
+exclude_unchanged = true
+stop_on_error = true
+delay = 1000
+
+[log]
+time = true
+
+[color]
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+
+[misc]
+clean_on_exit = true
+
+[screen]
+clear_on_rebuild = true
+keep_scroll = true
