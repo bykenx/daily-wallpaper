@@ -1,6 +1,6 @@
 <template>
   <div class="group relative overflow-hidden rounded-fluent bg-slate-200 shadow-subtle">
-    <img class="block aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-[1.03]" :src="imageSrc" alt="">
+    <img class="image-item__image block aspect-[16/10] w-full object-cover transition duration-500" :src="imageSrc" alt="">
     <div class="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/10 to-transparent opacity-70 transition group-hover:opacity-100" />
     <div class="absolute inset-x-0 bottom-0 flex translate-y-3 items-end gap-4 p-4 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:p-5">
       <div class="min-w-0 flex-1 text-[1.3rem] leading-6 text-white drop-shadow">
@@ -61,3 +61,14 @@ export default defineComponent({
   },
 })
 </script>
+
+<style scoped>
+.image-item__image {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.group:hover .image-item__image {
+  transform: translateZ(0) scale(1.03);
+}
+</style>
